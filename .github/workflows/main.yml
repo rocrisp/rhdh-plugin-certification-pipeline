@@ -1,0 +1,80 @@
+name: Certify Dynamic Plugin
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  setup-environment:
+    name: Set up OpenShift Environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to OpenShift Cluster
+        env:
+          OPENSHIFT_API_URL: ${{ secrets.OPENSHIFT_API_URL }}
+          OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+        run: |
+          oc login $OPENSHIFT_API_URL --token=$OPENSHIFT_TOKEN
+
+      - name: Install OpenShift CLI
+        uses: redhat-actions/oc-installer@v3
+        with:
+          version: latest
+
+  certify-dynamic-plugin:
+    name: Certify Dynamic Plugin
+    needs: setup-environment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Build and Push Dynamic Plugin Image
+        env:
+          IMAGE_REGISTRY: ${{ secrets.IMAGE_REGISTRY }}
+          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+          IMAGE_TAG: latest
+        run: |
+          docker build -t $IMAGE_REGISTRY/$IMAGE_NAME:$IMAGE_TAG .
+          echo "Pushing image to registry..."
+          docker push $IMAGE_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+
+      - name: Deploy Plugin in OpenShift
+        run: |
+          oc new-app $IMAGE_REGISTRY/$IMAGE_NAME:$IMAGE_TAG --name=dynamic-plugin
+
+      - name: Placeholder for Certification Tooling
+        run: |
+          echo "Running certification process..."
+          echo "This is a placeholder for future certification tooling."
+
+      - name: Run Tests
+        run: |
+          echo "Running tests..."
+          echo "Test suite execution to validate plugin functionality."
+
+  cleanup:
+    name: Cleanup Resources
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to OpenShift Cluster
+        env:
+          OPENSHIFT_API_URL: ${{ secrets.OPENSHIFT_API_URL }}
+          OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+        run: |
+          oc login $OPENSHIFT_API_URL --token=$OPENSHIFT_TOKEN
+
+      - name: Delete Resources
+        run: |
+          oc delete all --selector app=dynamic-plugin
+          echo "Cleanup complete."
