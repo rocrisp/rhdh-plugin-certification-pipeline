@@ -20,7 +20,7 @@ jobs:
       - name: 🌐 Set Up Kubeconfig and Connect to OpenShift
         uses: actions-hub/kubectl@master
         env:
-          KUBECONFIG: /opt/.kube/config
+          KUBECONFIG: ${{ secrets.KUBE_CONFIG }}
         with:
           args: cluster-info
       
