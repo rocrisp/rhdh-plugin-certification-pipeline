@@ -1,0 +1,103 @@
+name: RHDH Plugin Certification Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  setup-and-deploy:
+    name: Setup and Deploy RHDH
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🌐 Set Up Kubeconfig and Connect to OpenShift
+        uses: actions-hub/kubectl@master
+        env:
+          KUBECONFIG: /opt/.kube/config
+        with:
+          args: cluster-info
+      
+      - name: 🛠️ Install Helm
+        run: |
+          sudo apt update
+          sudo apt install -y g++
+          curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+          sudo apt-get install -y apt-transport-https
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update
+          sudo apt-get install -y helm
+
+      - name: 📦 Deploy Red Hat Developer Hub and Plugin
+        run: |
+          helm repo add openshift-helm-charts https://charts.openshift.io/
+          helm --kubeconfig /opt/.kube/config install -f dh-plugin-workflow-hackery/my_values.yaml \
+            redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
+            --namespace rhdh-todo --create-namespace
+
+  configure-dynamic-plugin:
+    name: Configure Dynamic Plugin
+    runs-on: ubuntu-latest
+    needs: setup-and-deploy
+    steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Clone RHDH Repository
+        run: git clone https://github.com/rocrisp/rhdh
+
+      - name: 📝 Generate Dynamic Plugin ConfigMap
+        run: |
+          cat <<EOF > dynamic-plugins-configmap.yaml
+          kind: ConfigMap
+          apiVersion: v1
+          metadata:
+            name: rhdh-dynamic-plugins
+          data:
+            dynamic-plugins.yaml: |
+              includes:
+                - 'dynamic-plugins.default.yaml'
+              plugins:
+                - package: oci://quay.io/tkral/backstage-community-plugin-todo:v0.1.1!backstage-community-plugin-todo
+                  disabled: false
+          EOF
+
+  run-smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+    needs: configure-dynamic-plugin
+    steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📥 Clone RHDH Repository
+        run: git clone https://github.com/rocrisp/rhdh
+
+      - name: 🚀 Install Node.js (NVM) and Dependencies
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+          source ~/.bashrc || source ~/.zshrc
+          nvm install 18
+          nvm use 18
+          node -v
+          cd rhdh
+          yarn install
+
+      - name: 🔬 Install Playwright Dependencies
+        run: |
+          cd rhdh/e2e-tests
+          yarn install
+          yarn playwright install chromium
+
+      - name: ✅ Run Playwright Smoke Test
+        env:
+          BASE_URL: https://redhat-developer-hub-rhdh-todo.apps.dancurran-lab2025.opdev.io/
+        run: |
+          cd rhdh/e2e-tests
+          npx playwright test playwright/e2e/custom-theme.spec.ts
