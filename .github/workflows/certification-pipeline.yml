@@ -34,7 +34,15 @@ jobs:
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
           sudo apt-get update
           sudo apt-get install -y helm
-
+      
+      - name: 🌐 Setup Kubeconfig and Verify Connection
+        run: |
+          mkdir /opt/.kube 
+          echo "$KUBESECRET" | base64  -d > /opt/.kube/config
+          helm --kubeconfig /opt/.kube/config list
+        env:
+          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
+      
       - name: 📦 Deploy Red Hat Developer Hub and Plugin
         run: |
           pwd; ls; helm repo add openshift-helm-charts https://charts.openshift.io/
