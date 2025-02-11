@@ -76,25 +76,36 @@ jobs:
                 - package: oci://quay.io/tkral/backstage-community-plugin-todo:v0.1.1!backstage-community-plugin-todo
                   disabled: false
           EOF
+          ls
+          cat dynamic-plugins-configmap.yaml
 
   run-smoke-tests:
     name: Run Smoke Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
     needs: configure-dynamic-plugin
     steps:
-      - name: 🛎️ Checkout Repository
-        uses: actions/checkout@v4
-
       - name: 📥 Clone RHDH Repository
-        run: git clone https://github.com/rocrisp/rhdh
+        run: |
+          git clone https://github.com/rocrisp/rhdh "$GITHUB_WORKSPACE/rhdh"
+          ls -l "$GITHUB_WORKSPACE"
 
-      - name: 🚀 Install Node.js (NVM) and Dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: 🚀 Install Dependencies
+        working-directory: rhdh
         run: |
           pwd
           yarn install
 
       - name: 🔬 Install Playwright Dependencies
-        working-directory: e2e-tests
+        working-directory: rhdh/e2e-tests
         run: |
           yarn install
           yarn playwright install chromium
@@ -112,12 +123,12 @@ jobs:
     needs: run-smoke-tests
     if: always()  # Ensures cleanup runs even if previous steps fail
     steps:
-    #   - name: 🛠️ Set Up Kubeconfig
-    #     run: |
-    #       mkdir -p /opt/.kube
-    #       echo "$KUBESECRET" | base64 -d > /opt/.kube/config
-    #     env:
-    #       KUBESECRET: ${{ secrets.KUBE_CONFIG }}
+      - name: 🛠️ Set Up Kubeconfig
+        run: |
+          mkdir -p /opt/.kube
+          echo "$KUBESECRET" | base64 -d > /opt/.kube/config
+        env:
+          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
 
     #   - name: 🔍 Get Helm Version
     #     run: |
