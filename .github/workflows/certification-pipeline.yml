@@ -20,6 +20,7 @@ jobs:
       - name: 🌐 Set Up Kubeconfig and Connect to OpenShift
         uses: actions-hub/kubectl@master
         env:
+          #cat $HOME/.kube/config | base64
           KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
         with:
           args: cluster-info
@@ -37,9 +38,9 @@ jobs:
       - name: 📦 Deploy Red Hat Developer Hub and Plugin
         run: |
           helm repo add openshift-helm-charts https://charts.openshift.io/
-          helm --kubeconfig /opt/.kube/config install -f dh-plugin-workflow-hackery/my_values.yaml \
+          helm --kubeconfig /opt/.kube/config install -f rhdh-plugin-certification-pipeline/values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
-            --namespace rhdh-todo --create-namespace
+            --namespace rhdh-smoketest --create-namespace
 
   configure-dynamic-plugin:
     name: Configure Dynamic Plugin
