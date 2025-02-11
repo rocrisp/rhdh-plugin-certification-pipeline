@@ -5,7 +5,7 @@ global:
       enabled: true
   clusterRouterBase: apps.dancurran-lab2025.opdev.io
   dynamic:
-    plugins[]
+    plugins: []
     includes:
       - dynamic-plugins.default.yaml
 nameOverride: developer-hub
