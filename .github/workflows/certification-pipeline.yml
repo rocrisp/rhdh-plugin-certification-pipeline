@@ -37,7 +37,7 @@ jobs:
 
       - name: 📦 Deploy Red Hat Developer Hub and Plugin
         run: |
-          helm repo add openshift-helm-charts https://charts.openshift.io/
+          pwd; ls; helm repo add openshift-helm-charts https://charts.openshift.io/
           helm --kubeconfig /opt/.kube/config install -f rhdh-plugin-certification-pipeline/values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
