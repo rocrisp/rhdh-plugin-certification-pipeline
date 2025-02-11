@@ -11,7 +11,7 @@ on:
 
 jobs:
   setup-and-deploy:
-    name: Setup and Deploy RHDH
+    name: Setup and Deploy RHDH on Openshift Cluster
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Checkout Repository
@@ -90,17 +90,12 @@ jobs:
 
       - name: 🚀 Install Node.js (NVM) and Dependencies
         run: |
-          curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-          source ~/.bashrc || source ~/.zshrc
-          nvm install 18
-          nvm use 18
-          node -v
-          cd rhdh
+          pwd
           yarn install
 
       - name: 🔬 Install Playwright Dependencies
+        working-directory: e2e-tests
         run: |
-          cd rhdh/e2e-tests
           yarn install
           yarn playwright install chromium
 
@@ -110,3 +105,39 @@ jobs:
         run: |
           cd rhdh/e2e-tests
           npx playwright test playwright/e2e/custom-theme.spec.ts
+
+  cleanup:
+    name: Cleanup Deployment
+    runs-on: ubuntu-latest
+    needs: run-smoke-tests
+    if: always()  # Ensures cleanup runs even if previous steps fail
+    steps:
+    #   - name: 🛠️ Set Up Kubeconfig
+    #     run: |
+    #       mkdir -p /opt/.kube
+    #       echo "$KUBESECRET" | base64 -d > /opt/.kube/config
+    #     env:
+    #       KUBESECRET: ${{ secrets.KUBE_CONFIG }}
+
+    #   - name: 🔍 Get Helm Version
+    #     run: |
+    #       HELM_VERSION=$(helm version --short)
+    #       echo "Helm version: $HELM_VERSION"
+    #       echo "HELM_VERSION=$HELM_VERSION" >> $GITHUB_ENV
+
+      - name: 📜 Get Helm Release Name
+        run: |
+          RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-smoketest -q | head -n 1)
+          if [ -z "$RELEASE_NAME" ]; then
+            echo "No Helm releases found in namespace rhdh-smoketest. Skipping uninstallation."
+            exit 0
+          fi
+          echo "Found Helm release: $RELEASE_NAME"
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+
+      - name: ❌ Uninstall Helm Release
+        run: |
+          helm uninstall $RELEASE_NAME --namespace rhdh-smoketest
+          echo "✅ Helm release '$RELEASE_NAME' has been uninstalled."
+        env:
+          RELEASE_NAME: ${{ env.RELEASE_NAME }}

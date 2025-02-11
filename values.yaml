@@ -100,8 +100,8 @@ upstream:
     - name: dynamic-plugins # <- section that already exists, only need to update config map
       configMap:
         defaultMode: 420
-        # name: '{{ printf "%s-dynamic-plugins" .Release.Name }}' # <- original value
-        name: rhdh-dynamic-plugins # <- part that got updated
+        name: '{{ printf "%s-dynamic-plugins" .Release.Name }}' # <- original value
+        #name: rhdh-dynamic-plugins # <- part that got updated
         optional: true
     - name: dynamic-plugins-npmrc
       secret:
