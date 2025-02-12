@@ -52,7 +52,7 @@ jobs:
      
       - name: Upgrade Helm Release
         run: |
-          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f backstage-community-plugin-todo/package.yml \
+          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f backstage-community-plugin-todo/package.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest
   
