@@ -49,33 +49,20 @@ jobs:
           helm --kubeconfig /opt/.kube/config install -f values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
-
-  configure-deploy-dynamic-plugin:
-    name: Configure and Deploy Dynamic Plugin
-    runs-on: ubuntu-latest
-    needs: setup-and-deploy
-    steps:
-      - name: 🌐 Setup Kubeconfig and Verify Connection
-        run: |
-          mkdir /opt/.kube 
-          echo "$KUBESECRET" | base64  -d > /opt/.kube/config
-          helm --kubeconfig /opt/.kube/config list
-        env:
-          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
-
+     
       - name: Upgrade Helm Release
         run: |
           helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f backstage-community-plugin-todo/package.yml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest
-
+  
   run-smoke-tests:
     name: Run Smoke Tests
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [20]
-    needs: configure-deploy-dynamic-plugin
+    needs: setup-and-deploy
     steps:
       - name: 📥 Clone RHDH Repository
         run: |
