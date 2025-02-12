@@ -1,4 +1,4 @@
-name: RHDH Plugin Certification Pipeline
+name: RHDH Plugin Certification Pipeline debug
 
 on:
   push:
