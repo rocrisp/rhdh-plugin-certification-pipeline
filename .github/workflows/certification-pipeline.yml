@@ -133,7 +133,7 @@ jobs:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: |
           cd rhdh/e2e-tests
-          npx playwright test playwright/e2e/smoke-test.spec.ts
+          npx playwright test playwright/e2e/guest-signin-happy-path.spec.ts
 
   cleanup:
     name: Cleanup Deployment
