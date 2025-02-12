@@ -45,104 +45,94 @@ jobs:
       
       - name: 📦 Deploy Red Hat Developer Hub and Plugin
         run: |
-          pwd; ls; helm repo add openshift-helm-charts https://charts.openshift.io/
+          helm repo add openshift-helm-charts https://charts.openshift.io/
           helm --kubeconfig /opt/.kube/config install -f values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
 
-#   configure-deploy-dynamic-plugin:
-#     name: Configure and Deploy Dynamic Plugin
-#     runs-on: ubuntu-latest
-#     needs: setup-and-deploy
-#     steps:
-#       - name: 📝 Generate Dynamic Plugin ConfigMap
-#         run: |
-#           cat <<EOF > dynamic-plugins-configmap.yaml
-#           kind: ConfigMap
-#           apiVersion: v1
-#           metadata:
-#             name: rhdh-dynamic-plugins
-#           data:
-#             dynamic-plugins.yaml: |
-#               includes:
-#                 - 'dynamic-plugins.default.yaml'
-#               plugins:
-#                 - package: oci://quay.io/tkral/backstage-community-plugin-todo:v0.1.1!backstage-community-plugin-todo
-#                   disabled: false
-#           EOF
-#           ls
-#           cat dynamic-plugins-configmap.yaml
+  configure-deploy-dynamic-plugin:
+    name: Configure and Deploy Dynamic Plugin
+    runs-on: ubuntu-latest
+    needs: setup-and-deploy
+    steps:
+      - name: Upgrade Helm Release
+        run: |
+          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f backstage-community-plugin-todo/package.yml \
+            redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
+            --namespace rhdh-smoketest
+        env:
+          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
 
-#   run-smoke-tests:
-#     name: Run Smoke Tests
-#     runs-on: ubuntu-latest
-#     strategy:
-#       matrix:
-#         node-version: [20]
-#     needs: configure-deploy-dynamic-plugin
-#     steps:
-#       - name: 📥 Clone RHDH Repository
-#         run: |
-#           git clone https://github.com/rocrisp/rhdh "$GITHUB_WORKSPACE/rhdh"
-#           ls -l "$GITHUB_WORKSPACE"
+  run-smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    needs: configure-deploy-dynamic-plugin
+    steps:
+      - name: 📥 Clone RHDH Repository
+        run: |
+          git clone https://github.com/rocrisp/rhdh "$GITHUB_WORKSPACE/rhdh"
+          ls -l "$GITHUB_WORKSPACE"
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
-#         with:
-#           node-version: ${{ matrix.node-version }}
-#           registry-url: 'https://registry.npmjs.org'
+      - name: Setup Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
 
-#       - name: 🚀 Install Dependencies
-#         working-directory: rhdh
-#         run: |
-#           pwd
-#           yarn install
+      - name: 🚀 Install Dependencies
+        working-directory: rhdh
+        run: |
+          pwd
+          yarn install
 
-#       - name: 🔬 Install Playwright Dependencies
-#         working-directory: rhdh/e2e-tests
-#         run: |
-#           yarn install
-#           yarn playwright install chromium
+      - name: 🔬 Install Playwright Dependencies
+        working-directory: rhdh/e2e-tests
+        run: |
+          yarn install
+          yarn playwright install chromium
 
-#       - name: ✅ Run Playwright Smoke Test
-#         env:
-#           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
-#         run: |
-#           cd rhdh/e2e-tests
-#           npx playwright test playwright/e2e/smoke-test.spec.ts
+      - name: ✅ Run Playwright Smoke Test
+        env:
+          BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
+        run: |
+          cd rhdh/e2e-tests
+          npx playwright test playwright/e2e/smoke-test.spec.ts
 
-#   cleanup:
-#     name: Cleanup Deployment
-#     runs-on: ubuntu-latest
-#     needs: run-smoke-tests
-#     if: always()  # Ensures cleanup runs even if previous steps fail
-#     steps:
-#       - name: 🛠️ Set Up Kubeconfig
-#         run: |
-#           mkdir -p /opt/.kube
-#           echo "$KUBESECRET" | base64 -d > /opt/.kube/config
-#         env:
-#           KUBESECRET: ${{ secrets.KUBE_CONFIG }}
+  cleanup:
+    name: Cleanup Deployment
+    runs-on: ubuntu-latest
+    needs: run-smoke-tests
+    if: always()  # Ensures cleanup runs even if previous steps fail
+    steps:
+      - name: 🛠️ Set Up Kubeconfig
+        run: |
+          mkdir -p /opt/.kube
+          echo "$KUBESECRET" | base64 -d > /opt/.kube/config
+        env:
+          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
 
-#     #   - name: 🔍 Get Helm Version
-#     #     run: |
-#     #       HELM_VERSION=$(helm version --short)
-#     #       echo "Helm version: $HELM_VERSION"
-#     #       echo "HELM_VERSION=$HELM_VERSION" >> $GITHUB_ENV
+    #   - name: 🔍 Get Helm Version
+    #     run: |
+    #       HELM_VERSION=$(helm version --short)
+    #       echo "Helm version: $HELM_VERSION"
+    #       echo "HELM_VERSION=$HELM_VERSION" >> $GITHUB_ENV
 
-#       - name: 📜 Get Helm Release Name
-#         run: |
-#           RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-smoketest -q | head -n 1)
-#           if [ -z "$RELEASE_NAME" ]; then
-#             echo "No Helm releases found in namespace rhdh-smoketest. Skipping uninstallation."
-#             exit 0
-#           fi
-#           echo "Found Helm release: $RELEASE_NAME"
-#           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+      - name: 📜 Get Helm Release Name
+        run: |
+          RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-smoketest -q | head -n 1)
+          if [ -z "$RELEASE_NAME" ]; then
+            echo "No Helm releases found in namespace rhdh-smoketest. Skipping uninstallation."
+            exit 0
+          fi
+          echo "Found Helm release: $RELEASE_NAME"
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
 
-#       - name: ❌ Uninstall Helm Release
-#         run: |
-#           helm uninstall --kubeconfig /opt/.kube/config $RELEASE_NAME --namespace rhdh-smoketest
-#           echo "✅ Helm release '$RELEASE_NAME' has been uninstalled."
-#         env:
-#           RELEASE_NAME: ${{ env.RELEASE_NAME }}
+      - name: ❌ Uninstall Helm Release
+        run: |
+          helm uninstall --kubeconfig /opt/.kube/config $RELEASE_NAME --namespace rhdh-smoketest
+          echo "✅ Helm release '$RELEASE_NAME' has been uninstalled."
+        env:
+          RELEASE_NAME: ${{ env.RELEASE_NAME }}
