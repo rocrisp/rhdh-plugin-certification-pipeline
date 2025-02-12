@@ -55,13 +55,19 @@ jobs:
     runs-on: ubuntu-latest
     needs: setup-and-deploy
     steps:
+      - name: 🌐 Setup Kubeconfig and Verify Connection
+        run: |
+          mkdir /opt/.kube 
+          echo "$KUBESECRET" | base64  -d > /opt/.kube/config
+          helm --kubeconfig /opt/.kube/config list
+        env:
+          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
+
       - name: Upgrade Helm Release
         run: |
           helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f backstage-community-plugin-todo/package.yml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest
-        env:
-          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
 
   run-smoke-tests:
     name: Run Smoke Tests
