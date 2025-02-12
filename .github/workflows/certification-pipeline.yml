@@ -10,13 +10,42 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup-and-deploy:
-    name: Setup and Deploy RHDH on Openshift Cluster
+  detect-changes:
+    name: Detect PR Changes
     runs-on: ubuntu-latest
+    outputs:
+      modified_files: ${{ steps.changed-files.outputs.all_changed_files }}
+      plugin_name: ${{ steps.extract-plugin.outputs.plugin_name }}
+      package_yaml: ${{ steps.extract-plugin.outputs.package_yaml }}
     steps:
       - name: 🛎️ Checkout Repository
         uses: actions/checkout@v4
 
+      - name: 🔍 Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+            files: plugins/**/package.yaml
+
+      - name: 📥 Extract Plugin Name and Package.yaml Path
+        id: extract-plugin
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          if [[ "$file" == plugins/*/package.yaml ]]; then
+            PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)  # Extract plugin-name
+            echo "Plugin name: $PLUGIN_NAME"
+            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_ENV
+            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_OUTPUT
+            echo "PACKAGE_YAML=$file" >> $GITHUB_ENV
+            echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
+          fi
+          done
+       
+  setup-and-deploy:
+    name: Setup and Deploy - ${{ needs.detect-changes.outputs.plugin_name }}
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    steps:
       - name: 🌐 Set Up Kubeconfig and Connect to OpenShift
         uses: actions-hub/kubectl@master
         env:
@@ -50,9 +79,9 @@ jobs:
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
      
-      - name: Upgrade Helm Release
+      - name: Upgrade Helm Release to include Plugin
         run: |
-          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f backstage-community-plugin-todo/package.yaml \
+          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f "${{ needs.detect-changes.outputs.package_yaml }}" \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest
   
