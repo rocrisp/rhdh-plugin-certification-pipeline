@@ -1,12 +1,12 @@
 name: RHDH Plugin Certification Pipeline
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 jobs:
@@ -92,7 +92,9 @@ jobs:
             --namespace rhdh-smoketest --create-namespace
      
       - name: Upgrade Helm Release to include Plugin
+        if: ${{ needs.detect-changes.outputs.modified_files != '' }}  # Runs only if there are changed files
         run: |
+          echo "🔄 Upgrading Helm Release with package: ${{ needs.detect-changes.outputs.package_yaml }}"
           helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f "${{ needs.detect-changes.outputs.package_yaml }}" \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest
