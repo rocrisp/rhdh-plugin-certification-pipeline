@@ -1,12 +1,12 @@
 name: RHDH Plugin Certification Pipeline
 
 on:
-  # push:
-  #   branches:
-  #     - main
-  # pull_request:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -109,9 +109,14 @@ jobs:
     steps:
       - name: 📥 Clone RHDH Repository
         run: |
-          git clone https://github.com/rocrisp/rhdh "$GITHUB_WORKSPACE/rhdh"
+          git clone --branch release-1.4 --single-branch https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
           ls -l "$GITHUB_WORKSPACE"
-
+  
+      - name: Veryify Branch
+        run: |
+          cd "$GITHUB_WORKSPACE/rhdh"
+          git branch --show-current
+      
       - name: Setup Node.js
         uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
         with:
@@ -135,7 +140,7 @@ jobs:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: |
           cd rhdh/e2e-tests
-          npx playwright test playwright/e2e/guest-signin-happy-path.spec.ts
+          yarn playwright test playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts
 
   cleanup:
     name: Cleanup Deployment
