@@ -48,12 +48,12 @@ tmpfile=/tmp/redhat-developer-hub.chart.values.yml
 CHART_URL="https://github.com/rhdh-bot/openshift-helm-charts/raw/redhat-developer-hub-${CV}/charts/redhat/redhat/redhat-developer-hub/${CV}/redhat-developer-hub-${CV}.tgz"
 
 # choose namespace for the install (or create if non-existant)
-oc new-project "$namespace" || oc project "$namespace"
+oc --kubeconfig /opt/.kube/config new-project "$namespace" || oc project "$namespace"
 
 # if a CI chart, create a chart repo
 if [[ $CV == *"-CI" ]]; then chartrepo=1; fi
 if [[ $chartrepo -eq 1 ]]; then
-    oc apply -f https://github.com/rhdh-bot/openshift-helm-charts/raw/redhat-developer-hub-${CV}/installation/rhdh-next-ci-repo.yaml
+    oc --kubeconfig /opt/.kube/config apply -f https://github.com/rhdh-bot/openshift-helm-charts/raw/redhat-developer-hub-${CV}/installation/rhdh-next-ci-repo.yaml
 fi
 
 # 1. install (or upgrade)
