@@ -47,7 +47,6 @@ if [[ ! $CV ]]; then usage; fi
 export KUBECONFIG=/opt/.kube/config
 tmpfile=/tmp/redhat-developer-hub.chart.values.yml
 CHART_URL="https://github.com/rhdh-bot/openshift-helm-charts/raw/redhat-developer-hub-${CV}/charts/redhat/redhat/redhat-developer-hub/${CV}/redhat-developer-hub-${CV}.tgz"
-echo "package_yaml: $package_yaml"
 
 # choose namespace for the install (or create if non-existant)
 oc --kubeconfig /opt/.kube/config new-project "$namespace" || oc project "$namespace"
@@ -66,10 +65,23 @@ PASSWORD=$(kubectl get secret redhat-developer-hub-postgresql -o jsonpath="{.dat
 CLUSTER_ROUTER_BASE=$(oc get route console -n openshift-console -o=jsonpath='{.spec.host}' | sed 's/^[^.]*\.//')
 
 # 3. change values
-helm --kubeconfig /opt/.kube/config upgrade redhat-developer-hub -i "${CHART_URL}" \
+helm_cmd="helm --kubeconfig /opt/.kube/config upgrade redhat-developer-hub -i \"${CHART_URL}\" \
     --reuse-values \
-    --set global.clusterRouterBase="${CLUSTER_ROUTER_BASE}" \
-    --set global.postgresql.auth.password="$PASSWORD"
+    --set global.clusterRouterBase=\"${CLUSTER_ROUTER_BASE}\" \
+    --set global.postgresql.auth.password=\"$PASSWORD\""
+
+# Validate package_yaml file before using it
+if [[ -n "$package_yaml" ]]; then
+  if [[ -s "$package_yaml" ]]; then
+    helm_cmd+=" -f $package_yaml"
+  else
+    echo "Skipping empty values file: $package_yaml"
+  fi
+fi
+
+# Execute the Helm command
+echo "Running: $helm_cmd"
+eval "$helm_cmd"
 
 # 4. cleanup
 rm -f "$tmpfile"
