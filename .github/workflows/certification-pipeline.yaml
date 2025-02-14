@@ -1,12 +1,12 @@
 name: RHDH Plugin Certification Pipeline
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
+  # pull_request:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 jobs:
@@ -84,14 +84,14 @@ jobs:
         env:
           KUBESECRET: ${{ secrets.KUBE_CONFIG }}
       
-      - name: 📦 Deploy Red Hat Developer Hub and Plugin
+      - name: 📦 Deploy Red Hat Developer Hub
         run: |
           helm repo add openshift-helm-charts https://charts.openshift.io/
           helm --kubeconfig /opt/.kube/config install -f values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
      
-      - name: Upgrade Helm Release to include Plugin
+      - name: Install Dynamic Plugin
         if: ${{ needs.detect-changes.outputs.modified_files != '' }}  # Runs only if there are changed files
         run: |
           echo "🔄 Upgrading Helm Release with package: ${{ needs.detect-changes.outputs.package_yaml }}"
