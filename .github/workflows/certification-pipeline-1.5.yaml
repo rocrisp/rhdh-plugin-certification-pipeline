@@ -1,4 +1,4 @@
-name: RHDH Plugin Certification Pipeline
+name: RHDH 1.5 Plugin Certification Pipeline
 
 on:
   push:
@@ -87,10 +87,6 @@ jobs:
       - name: 📦 Deploy Red Hat Developer Hub
         run: |
           pwd
-        #  helm repo add openshift-helm-charts https://charts.openshift.io/
-        #   helm --kubeconfig /opt/.kube/config install -f values.yaml \
-        #     redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
-        #     --namespace rhdh-smoketest --create-namespace
           ./install.sh 1.5-78-CI --namespace rhdh-1-5-78-ci --chartrepo
      
     #   - name: Install Dynamic Plugin
