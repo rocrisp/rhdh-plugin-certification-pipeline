@@ -67,6 +67,7 @@ CLUSTER_ROUTER_BASE=$(oc get route console -n openshift-console -o=jsonpath='{.s
 
 # 3. change values
 helm --kubeconfig /opt/.kube/config upgrade redhat-developer-hub -i "${CHART_URL}" \
+    --reuse-values \
     --set global.clusterRouterBase="${CLUSTER_ROUTER_BASE}" \
     --set global.postgresql.auth.password="$PASSWORD"
 
