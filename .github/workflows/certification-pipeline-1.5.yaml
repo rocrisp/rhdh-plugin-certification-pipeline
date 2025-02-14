@@ -75,6 +75,13 @@ jobs:
           echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
           sudo apt-get update
           sudo apt-get install -y helm
+
+      - name: Install OpenShift CLI (oc) - Specific Version
+        run: |
+          OC_VERSION="4.14.0"
+          curl -LO "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${OC_VERSION}/openshift-client-linux.tar.gz"
+          tar -xvzf openshift-client-linux.tar.gz
+          sudo mv oc kubectl /usr/local/bin/
       
       - name: 🌐 Setup Kubeconfig and Verify Connection
         run: |
@@ -86,7 +93,7 @@ jobs:
       
       - name: Set Execute Permission for install.sh
         run: chmod +x install.sh
-        
+
       - name: 📦 Deploy Red Hat Developer Hub
         run: |
           pwd
