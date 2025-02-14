@@ -95,9 +95,7 @@ jobs:
         run: chmod +x install.sh
 
       - name: 📦 Deploy Red Hat Developer Hub
-        run: | 
-          echo "$KUBESECRET" | base64  -d > /opt/.kube/config
-          pwd
+        run: |
           ./install.sh 1.5-78-CI --namespace rhdh-1-5-78-ci --chartrepo
      
     #   - name: Install Dynamic Plugin
