@@ -84,6 +84,9 @@ jobs:
         env:
           KUBESECRET: ${{ secrets.KUBE_CONFIG }}
       
+      - name: Set Execute Permission for install.sh
+        run: chmod +x install.sh
+        
       - name: 📦 Deploy Red Hat Developer Hub
         run: |
           pwd
