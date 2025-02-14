@@ -95,8 +95,7 @@ jobs:
         run: chmod +x install.sh
 
       - name: 📦 Deploy Red Hat Developer Hub
-        run: |
-          mkdir /opt/.kube 
+        run: | 
           echo "$KUBESECRET" | base64  -d > /opt/.kube/config
           pwd
           ./install.sh 1.5-78-CI --namespace rhdh-1-5-78-ci --chartrepo
