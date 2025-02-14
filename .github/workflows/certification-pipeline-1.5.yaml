@@ -1,0 +1,178 @@
+name: RHDH Plugin Certification Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    name: Detect PR Changes
+    runs-on: ubuntu-latest
+    outputs:
+      modified_files: ${{ steps.changed-files.outputs.all_changed_files }}
+      plugin_name: ${{ steps.extract-plugin.outputs.plugin_name }}
+      package_yaml: ${{ steps.extract-plugin.outputs.package_yaml }}
+    steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Get Changed Files
+        id: changed-files
+        uses: tj-actions/changed-files@v41
+        with:
+            files: plugins/**/package.yaml
+
+      - name: 📥 Save Repository as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-artifact
+          path: .  # Saves the entire repository
+
+      - name: 📥 Extract Plugin Name and Package.yaml Path
+        id: extract-plugin
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          if [[ "$file" == plugins/*/package.yaml ]]; then
+            PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)  # Extract plugin-name
+            echo "Plugin name: $PLUGIN_NAME"
+            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_ENV
+            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_OUTPUT
+            echo "PACKAGE_YAML=$file" >> $GITHUB_ENV
+            echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
+          fi
+          done
+       
+  setup-and-deploy:
+    name: Setup and Deploy - ${{ needs.detect-changes.outputs.plugin_name }}
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    steps:
+      - name: 📤 Download Repository Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: repo-artifact
+          path: .
+
+      - name: 🌐 Set Up Kubeconfig and Connect to OpenShift
+        uses: actions-hub/kubectl@master
+        env:
+          #cat $HOME/.kube/config | base64
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG }}
+        with:
+          args: cluster-info
+      
+      - name: 🛠️ Install Helm
+        run: |
+          sudo apt update
+          sudo apt install -y g++
+          curl https://baltocdn.com/helm/signing.asc | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
+          sudo apt-get install -y apt-transport-https
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
+          sudo apt-get update
+          sudo apt-get install -y helm
+      
+      - name: 🌐 Setup Kubeconfig and Verify Connection
+        run: |
+          mkdir /opt/.kube 
+          echo "$KUBESECRET" | base64  -d > /opt/.kube/config
+          helm --kubeconfig /opt/.kube/config list
+        env:
+          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
+      
+      - name: 📦 Deploy Red Hat Developer Hub
+        run: |
+          pwd
+        #  helm repo add openshift-helm-charts https://charts.openshift.io/
+        #   helm --kubeconfig /opt/.kube/config install -f values.yaml \
+        #     redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
+        #     --namespace rhdh-smoketest --create-namespace
+          ./install.sh 1.5-78-CI --namespace rhdh-1-5-78-ci --chartrepo
+     
+    #   - name: Install Dynamic Plugin
+    #     if: ${{ needs.detect-changes.outputs.modified_files != '' }}  # Runs only if there are changed files
+    #     run: |
+    #       echo "🔄 Upgrading Helm Release with package: ${{ needs.detect-changes.outputs.package_yaml }}"
+    #       helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f "${{ needs.detect-changes.outputs.package_yaml }}" \
+    #         redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
+    #         --namespace rhdh-smoketest
+  
+  run-smoke-tests:
+    name: Run Smoke Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+    needs: setup-and-deploy
+    steps:
+      - name: 📥 Clone RHDH Repository
+        # run: |
+        #   git clone --branch release-1.4 --single-branch https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
+        #   ls -l "$GITHUB_WORKSPACE"
+        run: |
+          git clone https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
+          ls -l "$GITHUB_WORKSPACE"
+  
+      - name: Veryify Branch
+        run: |
+          cd "$GITHUB_WORKSPACE/rhdh"
+          git branch --show-current
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: 🚀 Install Dependencies
+        working-directory: rhdh
+        run: |
+          pwd
+          yarn install
+
+      - name: 🔬 Install Playwright Dependencies
+        working-directory: rhdh/e2e-tests
+        run: |
+          yarn install
+          yarn playwright install chromium
+
+      - name: ✅ Run Playwright Smoke Test
+        env:
+          BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
+        run: |
+          cd rhdh/e2e-tests
+          yarn playwright test playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts
+
+  cleanup:
+    name: Cleanup Deployment
+    runs-on: ubuntu-latest
+    needs: run-smoke-tests
+    if: always()  # Ensures cleanup runs even if previous steps fail
+    steps:
+      - name: 🛠️ Set Up Kubeconfig
+        run: |
+          mkdir -p /opt/.kube
+          echo "$KUBESECRET" | base64 -d > /opt/.kube/config
+        env:
+          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
+
+      - name: 📜 Get Helm Release Name
+        run: |
+          RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-smoketest -q | head -n 1)
+          if [ -z "$RELEASE_NAME" ]; then
+            echo "No Helm releases found in namespace rhdh-smoketest. Skipping uninstallation."
+            exit 0
+          fi
+          echo "Found Helm release: $RELEASE_NAME"
+          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+
+      - name: ❌ Uninstall Helm Release
+        run: |
+          helm uninstall --kubeconfig /opt/.kube/config $RELEASE_NAME --namespace rhdh-smoketest
+          echo "✅ Helm release '$RELEASE_NAME' has been uninstalled."
+        env:
+          RELEASE_NAME: ${{ env.RELEASE_NAME }}
