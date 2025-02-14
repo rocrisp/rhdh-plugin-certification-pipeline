@@ -30,11 +30,12 @@ Options:
 }
 
 if [[ $# -lt 1 ]]; then usage; fi
-
+# ./install.sh 1.5-78-CI --namespace rhdh-1-5-78-ci --chartrepo --package ${{ needs.detect-changes.outputs.package_yaml }}
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-r'|'--chartrepo') chartrepo=1;;
     '-n'|'--namespace') namespace="$2"; shift 1;;
+    '-p'|'--package') package_yaml="$2"; shift 1;;  # New flag for package_yaml
     '-h') usage;;
     *) CV="$1";;
   esac
@@ -46,11 +47,10 @@ if [[ ! $CV ]]; then usage; fi
 export KUBECONFIG=/opt/.kube/config
 tmpfile=/tmp/redhat-developer-hub.chart.values.yml
 CHART_URL="https://github.com/rhdh-bot/openshift-helm-charts/raw/redhat-developer-hub-${CV}/charts/redhat/redhat/redhat-developer-hub/${CV}/redhat-developer-hub-${CV}.tgz"
+echo "package_yaml: $package_yaml"
 
 # choose namespace for the install (or create if non-existant)
-ls /opt/.kube/config
 oc --kubeconfig /opt/.kube/config new-project "$namespace" || oc project "$namespace"
-echo "there"
 
 # if a CI chart, create a chart repo
 if [[ $CV == *"-CI" ]]; then chartrepo=1; fi

@@ -96,7 +96,7 @@ jobs:
 
       - name: 📦 Deploy Red Hat Developer Hub
         run: |
-          ./install.sh 1.5-78-CI --namespace rhdh-1-5-78-ci --chartrepo
+          ./install.sh 1.5-78-CI --namespace rhdh-1-5-78-ci --chartrepo --package ${{ needs.detect-changes.outputs.package_yaml }}
      
     #   - name: Install Dynamic Plugin
     #     if: ${{ needs.detect-changes.outputs.modified_files != '' }}  # Runs only if there are changed files
@@ -167,9 +167,9 @@ jobs:
 
       - name: 📜 Get Helm Release Name
         run: |
-          RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-smoketest -q | head -n 1)
+          RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-1-5-78-ci -q | head -n 1)
           if [ -z "$RELEASE_NAME" ]; then
-            echo "No Helm releases found in namespace rhdh-smoketest. Skipping uninstallation."
+            echo "No Helm releases found in namespace rhdh-1-5-78-ci. Skipping uninstallation."
             exit 0
           fi
           echo "Found Helm release: $RELEASE_NAME"
@@ -177,7 +177,7 @@ jobs:
 
       - name: ❌ Uninstall Helm Release
         run: |
-          helm uninstall --kubeconfig /opt/.kube/config $RELEASE_NAME --namespace rhdh-smoketest
+          helm uninstall --kubeconfig /opt/.kube/config $RELEASE_NAME --namespace rhdh-1-5-78-ci
           echo "✅ Helm release '$RELEASE_NAME' has been uninstalled."
         env:
           RELEASE_NAME: ${{ env.RELEASE_NAME }}
