@@ -55,6 +55,8 @@ jobs:
             if [[ "$file" == plugins/*/*/package.yaml ]]; then
                 PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)  # Extract plugin-name
                 VERSION=$(echo "$file" | cut -d'/' -f3)  # Extract version
+                SMOKE_TEST_FILE="plugins/$PLUGIN_NAME/$VERSION/smoke-test.ts"  # Set it dynamically
+
                 echo "Plugin name: $PLUGIN_NAME"
                 echo "Version: $VERSION"
                 echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_ENV
@@ -63,9 +65,6 @@ jobs:
                 echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
                 echo "PACKAGE_YAML=$file" >> $GITHUB_ENV
                 echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
-            fi
-            if [[ "$file" == plugins/*/*/smoke-test.ts ]]; then
-                SMOKE_TEST_FILE=$file
                 echo "Smoke Test File: $SMOKE_TEST_FILE"
                 echo "SMOKE_TEST_FILE=$SMOKE_TEST_FILE" >> $GITHUB_ENV
                 echo "SMOKE_TEST_FILE=$SMOKE_TEST_FILE" >> $GITHUB_OUTPUT
