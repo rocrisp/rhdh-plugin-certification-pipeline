@@ -1,9 +1,9 @@
 name: RHDH Plugin Certification Pipeline debug
 
 on:
-#   push:
-#     branches:
-#       - main
+  push:
+    branches:
+      - main
 #   pull_request:
 #     branches:
 #       - main
@@ -17,6 +17,7 @@ jobs:
       modified_files: ${{ steps.changed-files.outputs.all_changed_files }}
       plugin_name: ${{ steps.extract-plugin.outputs.plugin_name }}
       package_yaml: ${{ steps.extract-plugin.outputs.package_yaml }}
+      smoke_test_file: ${{ steps.extract-plugin.outputs.smoke_test_file }}
     steps:
       - name: 🛎️ Checkout Repository
         uses: actions/checkout@v4
@@ -25,7 +26,7 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v41
         with:
-            files: plugins/**/package.yaml
+            files: plugins/**/*
 
       - name: 📥 Save Repository as Artifact
         uses: actions/upload-artifact@v4
@@ -36,15 +37,39 @@ jobs:
       - name: 📥 Extract Plugin Name and Package.yaml Path
         id: extract-plugin
         run: |
-          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-          if [[ "$file" == plugins/*/package.yaml ]]; then
-            PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)  # Extract plugin-name
-            echo "Plugin name: $PLUGIN_NAME"
-            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_ENV
-            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_OUTPUT
-            echo "PACKAGE_YAML=$file" >> $GITHUB_ENV
-            echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
+          PLUGIN_NAME=""
+          VERSION=""
+          PACKAGE_YAML=""
+          SMOKE_TEST_FILE=""
+
+          if [[ -z "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
+            echo "No plugin-related changes detected."
+            echo "PLUGIN_NAME=" >> $GITHUB_ENV
+            echo "VERSION=" >> $GITHUB_ENV
+            echo "PACKAGE_YAML=" >> $GITHUB_ENV
+            echo "SMOKE_TEST_FILE=" >> $GITHUB_ENV
+            exit 0
           fi
+
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            if [[ "$file" == plugins/*/*/package.yaml ]]; then
+                PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)  # Extract plugin-name
+                VERSION=$(echo "$file" | cut -d'/' -f3)  # Extract version
+                echo "Plugin name: $PLUGIN_NAME"
+                echo "Version: $VERSION"
+                echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_ENV
+                echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_OUTPUT
+                echo "VERSION=$VERSION" >> $GITHUB_ENV
+                echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+                echo "PACKAGE_YAML=$file" >> $GITHUB_ENV
+                echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
+            fi
+            if [[ "$file" == plugins/*/*/smoke-test.ts ]]; then
+                SMOKE_TEST_FILE=$file
+                echo "Smoke Test File: $SMOKE_TEST_FILE"
+                echo "SMOKE_TEST_FILE=$SMOKE_TEST_FILE" >> $GITHUB_ENV
+                echo "SMOKE_TEST_FILE=$SMOKE_TEST_FILE" >> $GITHUB_OUTPUT
+            fi
           done
        
   setup-and-deploy:
@@ -103,7 +128,8 @@ jobs:
     strategy:
       matrix:
         node-version: [20]
-    needs: setup-and-deploy
+    needs: 
+      - setup-and-deploy
     steps:
       - name: 📥 Clone RHDH Repository
         run: |
@@ -138,4 +164,6 @@ jobs:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: |
           cd rhdh/e2e-tests
+          echo "env.SMOKE_TEST_FILE: ${{ steps.extract-plugin.outputs.smoke_test_file }}"
+          cat ${{ steps.extract-plugin.outputs.smoke_test_file }}
           yarn playwright test --project="showcase-k8s"
