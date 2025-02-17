@@ -1,4 +1,5 @@
 global:
+  #test
   dynamic:
     plugins:
       - package: ./dynamic-plugins/dist/backstage-community-plugin-quay
