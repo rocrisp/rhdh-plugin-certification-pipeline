@@ -130,6 +130,7 @@ jobs:
         node-version: [20]
     needs: 
       - setup-and-deploy
+      - detect-changes
     steps:
       - name: 📥 Clone RHDH Repository
         run: |
@@ -164,6 +165,6 @@ jobs:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: |
           cd rhdh/e2e-tests
-          echo "env.SMOKE_TEST_FILE: ${{ steps.extract-plugin.outputs.smoke_test_file }}"
-          cat ${{ steps.extract-plugin.outputs.smoke_test_file }}
-          yarn playwright test --project="showcase-k8s"
+          echo "env.SMOKE_TEST_FILE: ${{ needs.detect-changes.outputs.smoke_test_file }}"
+          cat ${{needs.detect-changes.outputs.smoke_test_file }}
+          yarn playwright test ${{needs.detect-changes.outputs.smoke_test_file }}
