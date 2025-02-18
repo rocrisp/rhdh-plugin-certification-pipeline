@@ -91,8 +91,8 @@ export default defineConfig({
       retries: 2,
     },
     {
-      name: "quay",
-      testMatch: ["**/playwright/e2e/quay.spec.ts"],
+      name: "smoke-test",
+      testMatch: ["**/playwright/e2e/smoke-test.ts"],
     },
     {
       name: "showcase-auth-providers-clear-environment",
