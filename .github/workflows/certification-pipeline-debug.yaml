@@ -156,7 +156,9 @@ jobs:
 
       - name: 📥 Clone RHDH Repository
         run: |
-          git clone --branch release-1.4 --single-branch https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
+          #git clone --branch release-1.4 --single-branch https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
+          #ls -l "$GITHUB_WORKSPACE"
+          git clone https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
           ls -l "$GITHUB_WORKSPACE"
 
       - name: Veryify Branch
