@@ -34,7 +34,7 @@ jobs:
           name: repo-artifact
           path: .  # Saves the entire repository
 
-      - name: 📥 Extract Plugin Name and Package.yaml Path
+      - name: 📥 Extract Plugin Name, package.yaml, and smoke-test.ts
         id: extract-plugin
         run: |
           PLUGIN_NAME=""
@@ -190,6 +190,7 @@ jobs:
           cp $GITHUB_WORKSPACE/$SMOKE_TEST_FILE playwright/e2e/
           echo "Copied $GITHUB_WORKSPACE/$SMOKE_TEST_FILE to playwright/e2e/"
           cp $GITHUB_WORKSPACE/playwright.config.ts .
+          echo "Copied $GITHUB_WORKSPACE/playwright.config.ts to playwright/e2e/"
     
       - name: ✅ Run Playwright Smoke Test
         env:
