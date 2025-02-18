@@ -197,7 +197,7 @@ jobs:
         env:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: 
-          yarn playwright --project="showcase-k8s"
+          yarn playwright test --project="showcase-k8s"
 
 
   cleanup:
