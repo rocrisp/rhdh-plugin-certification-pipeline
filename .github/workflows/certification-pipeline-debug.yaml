@@ -182,15 +182,15 @@ jobs:
           yarn install
           yarn playwright install chromium
 
-      - name: 📝 Copy Smoke Test File to Playwright Directory
-        working-directory: rhdh/e2e-tests
-        env:
-          SMOKE_TEST_FILE: ${{ needs.detect-changes.outputs.smoke_test_file }}
-        run: |
-          cp $GITHUB_WORKSPACE/$SMOKE_TEST_FILE playwright/e2e/
-          echo "Copied $GITHUB_WORKSPACE/$SMOKE_TEST_FILE to playwright/e2e/"
-          cp $GITHUB_WORKSPACE/playwright.config.ts .
-          echo "Copied $GITHUB_WORKSPACE/playwright.config.ts to ."
+      # - name: 📝 Copy Smoke Test File to Playwright Directory
+      #   working-directory: rhdh/e2e-tests
+      #   env:
+      #     SMOKE_TEST_FILE: ${{ needs.detect-changes.outputs.smoke_test_file }}
+      #   run: |
+      #     cp $GITHUB_WORKSPACE/$SMOKE_TEST_FILE playwright/e2e/
+      #     echo "Copied $GITHUB_WORKSPACE/$SMOKE_TEST_FILE to playwright/e2e/"
+      #     cp $GITHUB_WORKSPACE/playwright.config.ts .
+      #     echo "Copied $GITHUB_WORKSPACE/playwright.config.ts to ."
     
       - name: ✅ Run Playwright Smoke Test
         working-directory: rhdh/e2e-tests
