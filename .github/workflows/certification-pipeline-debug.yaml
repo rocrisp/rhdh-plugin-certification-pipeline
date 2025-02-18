@@ -197,7 +197,7 @@ jobs:
         env:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: 
-          yarn playwright test playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts
+          yarn playwright --project="smoke-test"
 
 
   cleanup:
