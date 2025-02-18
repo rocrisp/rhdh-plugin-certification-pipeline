@@ -53,7 +53,7 @@ export default defineConfig({
   projects: [
     {
       name: "smoke-test",
-      testMatch: ["**/playwright/e2e/smoke-test.ts"],
+      testMatch: ["**/playwright/e2e/smoke-test.spec.ts"],
     },
 
     // {
