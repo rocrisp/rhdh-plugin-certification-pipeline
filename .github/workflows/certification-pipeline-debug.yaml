@@ -190,13 +190,14 @@ jobs:
           cp $GITHUB_WORKSPACE/$SMOKE_TEST_FILE playwright/e2e/
           echo "Copied $GITHUB_WORKSPACE/$SMOKE_TEST_FILE to playwright/e2e/"
           cp $GITHUB_WORKSPACE/playwright.config.ts .
-          echo "Copied $GITHUB_WORKSPACE/playwright.config.ts to playwright/e2e/"
+          echo "Copied $GITHUB_WORKSPACE/playwright.config.ts to ."
     
       - name: ✅ Run Playwright Smoke Test
         env:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: |
           cd rhdh/e2e-tests
+          ls -ltr .
           ls -ltr playwright/e2e/
           yarn playwright test --project="smoke-test"
 
