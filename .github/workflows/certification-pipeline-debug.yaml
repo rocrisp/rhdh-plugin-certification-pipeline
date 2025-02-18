@@ -140,6 +140,20 @@ jobs:
       - setup-and-deploy
       - detect-changes
     steps:
+      - name: 🛎️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ✅ Verify Smoke Test File
+        run: |
+          echo "Checking for smoke test file: $GITHUB_WORKSPACE/${{ needs.detect-changes.outputs.smoke_test_file }}"
+          if [[ ! -f "$GITHUB_WORKSPACE/${{ needs.detect-changes.outputs.smoke_test_file }}" ]]; then
+            echo "ERROR: Smoke test file does not exist!"
+            exit 1
+          else
+            echo "Smoke test file found."
+            cat "$GITHUB_WORKSPACE/${{ needs.detect-changes.outputs.smoke_test_file }}"
+          fi
+          
       - name: 📥 Clone RHDH Repository
         run: |
           git clone --branch release-1.4 --single-branch https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
