@@ -41,6 +41,7 @@ jobs:
           VERSION=""
           PACKAGE_YAML=""
           SMOKE_TEST_FILE=""
+          pwd
 
           if [[ -z "${{ steps.changed-files.outputs.all_changed_files }}" ]]; then
             echo "No plugin-related changes detected."
@@ -55,7 +56,15 @@ jobs:
             if [[ "$file" == plugins/*/*/package.yaml ]]; then
                 PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)  # Extract plugin-name
                 VERSION=$(echo "$file" | cut -d'/' -f3)  # Extract version
-                SMOKE_TEST_FILE="plugins/$PLUGIN_NAME/$VERSION/smoke-test.ts"  # Set it dynamically
+
+                # Check if the smoke test file exists in the repository
+                SMOKE_TEST_FILE="plugins/$PLUGIN_NAME/$VERSION/smoke-test.ts"
+                if [[ -f "$SMOKE_TEST_FILE" ]]; then
+                  echo "Smoke test file exists: $SMOKE_TEST_FILE"
+                else
+                  echo "WARNING: No smoke-test.ts found for plugin $PLUGIN_NAME (version $VERSION)."
+                  SMOKE_TEST_FILE=""  # Don't set an invalid path
+                fi
 
                 echo "Plugin name: $PLUGIN_NAME"
                 echo "Version: $VERSION"
