@@ -153,7 +153,7 @@ jobs:
             echo "Smoke test file found."
             cat "$GITHUB_WORKSPACE/${{ needs.detect-changes.outputs.smoke_test_file }}"
           fi
-          
+
       - name: 📥 Clone RHDH Repository
         run: |
           git clone --branch release-1.4 --single-branch https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
@@ -182,12 +182,21 @@ jobs:
           yarn install
           yarn playwright install chromium
 
+      - name: 📝 Copy Smoke Test File to Playwright Directory
+        working-directory: rhdh/e2e-tests
+        env:
+          SMOKE_TEST_FILE: ${{ needs.detect-changes.outputs.smoke_test_file }}
+        run: |
+          cp $GITHUB_WORKSPACE/$SMOKE_TEST_FILE rhdh/e2e-tests/playwright/e2e/
+          echo "Copied $GITHUB_WORKSPACE/$SMOKE_TEST_FILE to rhdh/e2e-tests/playwright/e2e/"
+    
       - name: ✅ Run Playwright Smoke Test
         env:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
           SMOKE_TEST_FILE: ${{ needs.detect-changes.outputs.smoke_test_file }}
         run: |
           cd rhdh/e2e-tests
+
           echo "SMOKE_TEST_FILE path: $GITHUB_WORKSPACE/$SMOKE_TEST_FILE"
           cat $GITHUB_WORKSPACE/$SMOKE_TEST_FILE
           yarn playwright test $GITHUB_WORKSPACE/$SMOKE_TEST_FILE
