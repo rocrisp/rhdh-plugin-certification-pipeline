@@ -197,6 +197,7 @@ jobs:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: |
           cd rhdh/e2e-tests
+          ls -ltr e2e/
           yarn playwright test --project="smoke-test"
 
 
