@@ -199,7 +199,7 @@ jobs:
 
           echo "SMOKE_TEST_FILE path: $GITHUB_WORKSPACE/$SMOKE_TEST_FILE"
           cat $GITHUB_WORKSPACE/$SMOKE_TEST_FILE
-          yarn playwright test $GITHUB_WORKSPACE/$SMOKE_TEST_FILE
+          yarn playwright test playwright/e2e/smoke-test.ts
 
 
   cleanup:
