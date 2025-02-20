@@ -214,6 +214,7 @@ jobs:
           yarn playwright test playwright/e2e/smoke-test.spec.ts --project="any-test"
       # ✅ Upload Playwright Report inside the same job
       - name: Upload Playwright Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
