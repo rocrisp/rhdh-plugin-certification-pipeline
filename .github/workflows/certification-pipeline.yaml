@@ -219,7 +219,7 @@ jobs:
     needs: run-smoke-tests
     if: always()
     steps:
-      - name: Show current working directory
+      - name: Show current working directory and contents
         run: |
           echo "📂 Current working directory:"
           pwd
@@ -231,30 +231,33 @@ jobs:
           echo "🔍 Listing contents of parent directory:"
           ls -lah ..
 
-      - name: List all directories and files before upload
+      - name: Attempt to find Playwright Report
         run: |
-          echo "🔍 Listing all directories in the current directory recursively:"
-          find "$(pwd)" -type d || echo "❌ Error listing directories."
+          echo "🔍 Trying to locate 'rhdh' directory and navigate into it..."
+          if [ -d "rhdh" ]; then
+            cd rhdh
+            echo "✅ Successfully entered 'rhdh' directory."
+            echo "🔍 Listing contents inside 'rhdh':"
+            ls -lah
           
-          echo "🔍 Listing all files in the current directory recursively:"
-          find "$(pwd)" -type f || echo "❌ Error listing files."
+            if [ -d "e2e-tests" ]; then
+              cd e2e-tests
+              echo "✅ Successfully entered 'e2e-tests' directory."
+              echo "🔍 Listing contents inside 'e2e-tests':"
+              ls -lah
           
-          echo "🔍 Checking if e2e-tests directory exists:"
-          if [ -d "$(pwd)/rhdh/e2e-tests" ]; then
-            echo "✅ Directory rhdh/e2e-tests found!"
-            echo "🔍 Listing files inside e2e-tests:"
-            ls -lah "$(pwd)/rhdh/e2e-tests"
+              if [ -d "playwright-report" ]; then
+                echo "✅ Playwright report directory found!"
+                echo "🔍 Listing contents of 'playwright-report':"
+                ls -lah playwright-report
+              else
+                echo "❌ Playwright report directory NOT found!"
+              fi
+            else
+              echo "❌ 'e2e-tests' directory NOT found inside 'rhdh'!"
+            fi
           else
-            echo "❌ Directory rhdh/e2e-tests not found!"
-          fi
-          
-          echo "🔍 Checking if Playwright report directory exists:"
-          if [ -d "$(pwd)/rhdh/e2e-tests/playwright-report" ]; then
-            echo "✅ Directory rhdh/e2e-tests/playwright-report found!"
-            echo "🔍 Listing files inside Playwright report directory:"
-            ls -lah "$(pwd)/rhdh/e2e-tests/playwright-report"
-          else
-            echo "❌ Directory rhdh/e2e-tests/playwright-report not found!"
+            echo "❌ 'rhdh' directory NOT found in current path!"
           fi
 
       - name: Upload Playwright Report
