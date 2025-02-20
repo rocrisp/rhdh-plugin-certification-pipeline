@@ -64,13 +64,20 @@ jobs:
           name: repo-artifact
           path: .
 
-      - name: 🛠️ Check if Artifact Exists
+      - name: 📝 Check if Artifact Exists
         run: |
-          if [ ! -d "rhdh" ]; then
-            echo "❌ ERROR: Artifact repo-artifact not found or empty!"
+          echo "Checking if repo-artifact exists..."
+          ARTIFACT_COUNT=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" | jq '[.artifacts[] | select(.name=="repo-artifact")] | length')
+
+          if [ "$ARTIFACT_COUNT" -eq 0 ]; then
+            echo "❌ ERROR: Artifact 'repo-artifact' not found!"
             exit 1
+          else
+            echo "✅ Artifact 'repo-artifact' exists!"
           fi
-          echo "✅ Artifact repo-artifact successfully downloaded!"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🌐 Set Up Kubeconfig and Install Helm
         run: |
