@@ -298,46 +298,12 @@ jobs:
           echo "🔍 Listing contents of current directory:"
           ls -lah
 
-      - name: Show one level up directory
-        run: |
-          echo "🔍 Listing contents of parent directory:"
-          ls -lah ..
-
-      - name: Attempt to find Playwright Report
-        run: |
-          echo "🔍 Trying to locate 'rhdh' directory and navigate into it..."
-          if [ -d "rhdh" ]; then
-            cd rhdh
-            echo "✅ Successfully entered 'rhdh' directory."
-            echo "🔍 Listing contents inside 'rhdh':"
-            ls -lah
-          
-            if [ -d "e2e-tests" ]; then
-              cd e2e-tests
-              echo "✅ Successfully entered 'e2e-tests' directory."
-              echo "🔍 Listing contents inside 'e2e-tests':"
-              ls -lah
-          
-              if [ -d "playwright-report" ]; then
-                echo "✅ Playwright report directory found!"
-                echo "🔍 Listing contents of 'playwright-report':"
-                ls -lah playwright-report
-              else
-                echo "❌ Playwright report directory NOT found!"
-              fi
-            else
-              echo "❌ 'e2e-tests' directory NOT found inside 'rhdh'!"
-            fi
-          else
-            echo "❌ 'rhdh' directory NOT found in current path!"
-          fi
-
       # Deploy Playwright report to GitHub Pages
       - name: Deploy Playwright Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.GH_PAT }}
-          publish_dir: rhdh/e2e/playwright-report/
+          publish_dir: playwright-report/
           keep_files: true
 
       # Print the Playwright Report URL
