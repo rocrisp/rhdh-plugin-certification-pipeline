@@ -25,6 +25,7 @@ jobs:
 
       # Upload only necessary files to reduce artifact size
       - name: 📥 Save Repository as Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: repo-artifact
@@ -33,6 +34,10 @@ jobs:
             values.yaml
             rhdh/
           retention-days: 7
+
+      - name: Confirm Artifact Upload
+        run: |
+          echo "Artifact repo-artifact should be uploaded now!"
 
       # Extract plugin name and package.yaml path
       - name: 📥 Extract Plugin Name and Package.yaml Path
@@ -59,14 +64,31 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: 📝 List Available Artifacts
+        run: |
+          echo "🔍 Listing available artifacts..."
+          gh run list --json artifacts --jq '.artifacts[].name'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # Download the repository artifact
-      - name: 📤 Download Repository Artifact
+      - name: Download Repository Artifact
         uses: actions/download-artifact@v4
         with:
           name: repo-artifact
           path: .
+        continue-on-error: true
+
+      - name: Check if Artifact Exists
+        run: |
+          if [ ! -d "rhdh" ]; then
+            echo "ERROR: Artifact repo-artifact not found or empty!"
+            exit 1
+          fi
+          echo "Artifact repo-artifact successfully downloaded!"
 
       # Set up Kubeconfig and install Helm
+      - name: 🌐 Set Up Kubeconfig and Install Helm
       - name: 🌐 Set Up Kubeconfig and Install Helm
         run: |
           sudo apt update && sudo apt install -y g++
