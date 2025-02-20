@@ -214,7 +214,6 @@ jobs:
           yarn playwright test \
             playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts \
             --project="any-test" \
-            --output=rhdh/e2e-tests/playwright-report
 
   upload-logs-and-report:
     name: Upload Logs and Deploy Report
@@ -234,7 +233,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: e2e-tests/playwright-report/
+          path: playwright-report/
           retention-days: 7
           if-no-files-found: warn
           include-hidden-files: true
@@ -245,7 +244,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.GH_PAT }}
-          publish_dir: e2e-tests/playwright-report/
+          publish_dir: playwright-report/
           keep_files: true
 
       # Print the Playwright Report URL
