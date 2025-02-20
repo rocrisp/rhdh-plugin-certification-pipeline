@@ -148,6 +148,23 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Ensure RHDH Repository Exists
+        run: |
+          if [ ! -d "rhdh" ]; then
+            echo "RHDH repository not found. Cloning..."
+            git clone https://github.com/redhat-developer/rhdh.git
+          else
+            echo "RHDH repository already exists."
+          fi
+      - name: Verify RHDH Directory
+        run: |
+          if [ ! -d "rhdh" ]; then
+            echo "❌ ERROR: RHDH directory is missing!"
+            exit 1
+          else
+            echo "✅ RHDH directory found."
+          fi    
+
       - name: Install Dependencies
         run: |
           cd rhdh
