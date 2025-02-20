@@ -212,6 +212,15 @@ jobs:
         working-directory: rhdh/e2e-tests
         run: |
           yarn playwright test playwright/e2e/smoke-test.spec.ts --project="any-test"
+      # ✅ Upload Playwright Report inside the same job
+      - name: Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: rhdh/e2e-tests/playwright-report/
+          retention-days: 7
+          if-no-files-found: warn
+          include-hidden-files: true
 
       - name: Verify Playwright Report Before Upload
         if: always()
@@ -315,15 +324,6 @@ jobs:
           else
             echo "❌ 'rhdh' directory NOT found in current path!"
           fi
-
-      - name: Upload Playwright Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: rhdh/e2e/playwright-report/
-          retention-days: 7
-          if-no-files-found: warn
-          include-hidden-files: true
 
       # Deploy Playwright report to GitHub Pages
       - name: Deploy Playwright Report to GitHub Pages
