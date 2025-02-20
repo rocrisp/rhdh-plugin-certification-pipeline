@@ -234,8 +234,8 @@ jobs:
       - name: Deploy Playwright Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          personal_token: ${{ secrets.GH_PAT }}
-          publish_dir: rhdh/e2e-tests/playwright-report/
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: e2e-tests/playwright-report/
           keep_files: true
 
       # Print the Playwright Report URL
