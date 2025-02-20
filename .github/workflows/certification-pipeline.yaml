@@ -219,29 +219,29 @@ jobs:
     needs: run-smoke-tests
     if: always()
     steps:
-      - name: Show current working directory
-        run: |
-          echo "Current working directory:"
-          pwd
-
-          - name: List all directories and files before upload
-            run: |
-              echo "Listing all directories from root:"
-              find / -maxdepth 3 -type d 2>/dev/null || echo "❌ Error listing root directories."
-              
-              echo "Listing files in current working directory:"
-              find $(pwd) -type f || echo "❌ Error listing files in current directory."
-              
-              echo "Listing files in e2e-tests directory:"
-              find $(pwd)/rhdh/e2e-tests -type f || echo "❌ Directory rhdh/e2e-tests not found!"
-              
-              echo "Listing files in Playwright report directory:"
-              find $(pwd)/rhdh/e2e-tests/playwright-report -type f || echo "❌ Directory rhdh/e2e-tests/playwright-report not found!"
+#      - name: Show current working directory
+#        run: |
+#          echo "Current working directory:"
+#          pwd
+#
+#          - name: List all directories and files before upload
+#            run: |
+#              echo "Listing all directories from root:"
+#              find / -maxdepth 3 -type d 2>/dev/null || echo "❌ Error listing root directories."
+#
+#              echo "Listing files in current working directory:"
+#              find $(pwd) -type f || echo "❌ Error listing files in current directory."
+#
+#              echo "Listing files in e2e-tests directory:"
+#              find $(pwd)/rhdh/e2e-tests -type f || echo "❌ Directory rhdh/e2e-tests not found!"
+#
+#              echo "Listing files in Playwright report directory:"
+#              find $(pwd)/rhdh/e2e-tests/playwright-report -type f || echo "❌ Directory rhdh/e2e-tests/playwright-report not found!"
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: rhdh/e2e/playwright-report/
           retention-days: 7
           if-no-files-found: warn
           include-hidden-files: true
@@ -251,7 +251,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.GH_PAT }}
-          publish_dir: playwright-report/
+          publish_dir: rhdh/e2e/playwright-report/
           keep_files: true
 
       # Print the Playwright Report URL
