@@ -115,7 +115,7 @@ jobs:
           git clone https://github.com/redhat-developer/rhdh "$GITHUB_WORKSPACE/rhdh"
           ls -l "$GITHUB_WORKSPACE"
 
-      - name: Veryify Branch
+      - name: Verify Branch
         run: |
           cd "$GITHUB_WORKSPACE/rhdh"
           git branch --show-current
@@ -143,24 +143,23 @@ jobs:
           BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
         run: |
                cd rhdh/e2e-tests
-          #          yarn playwright test playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts
                yarn playwright test playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts --project="smoke-test" --override-config testMatch="playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts"
 
-      - name: 📂 Upload Playwright Report
+      - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: rhdh/e2e-tests/playwright-report/
           retention-days: 7
 
-      - name: 🚀 Deploy Playwright Report to GitHub Pages
+      - name: Deploy Playwright Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: rhdh/e2e-tests/playwright-report/
           keep_files: true
 
-      - name: 🔗 Print Playwright Report Link
+      - name: Print Playwright Report Link
         run: |
           REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           REPO_NAME=$(basename "${{ github.repository }}")
