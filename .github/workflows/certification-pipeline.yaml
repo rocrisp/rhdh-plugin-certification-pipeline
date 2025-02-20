@@ -51,20 +51,27 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect-changes
     steps:
-      - name: 📝 List Available Artifacts
+      - name: List Available Artifacts
         run: |
-          echo "🔍 Listing available artifacts..."
-          gh api repos/${{ github.repository }}/actions/artifacts | jq -r '.artifacts[].name'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "🔍 Fetching available artifacts..."
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
 
-      - name: 📤 Download Repository Artifact
+          echo "Response from GitHub API:"
+          echo "$RESPONSE" | jq
+
+          echo "Extracting artifact names..."
+          echo "$RESPONSE" | jq -r '.artifacts[]?.name // "No artifacts found"'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Repository Artifact
         uses: actions/download-artifact@v4
         with:
           name: repo-artifact
           path: .
 
-      - name: 📝 Check if Artifact Exists
+      - name: Check if Artifact Exists
         run: |
           echo "Checking if repo-artifact exists..."
           ARTIFACT_COUNT=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
