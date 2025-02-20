@@ -189,13 +189,12 @@ jobs:
           yarn playwright install chromium
 
       - name: Run Playwright Smoke Test
+        working-directory: rhdh/e2e-tests
         run: |
-          cd rhdh/e2e-tests
           yarn playwright test \
-          playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts \
-          --project="smoke-test" \
-          --override-config testMatch="playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts" \
-          --output=playwright-report
+            playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts \
+            --project="showcase" \
+            --output=playwright-report
 
   upload-logs-and-report:
     name: Upload Logs and Deploy Report
