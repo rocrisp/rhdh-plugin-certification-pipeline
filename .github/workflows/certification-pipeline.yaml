@@ -12,16 +12,19 @@ jobs:
       plugin_name: ${{ steps.extract-plugin.outputs.plugin_name }}
       package_yaml: ${{ steps.extract-plugin.outputs.package_yaml }}
     steps:
-      - name: 🛎️ Checkout Repository
+      # Checkout the repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🔍 Get Changed Files
+      # Identify modified plugin files
+      - name: Get Changed Files
         id: changed-files
         uses: tj-actions/changed-files@v41
         with:
           files: plugins/**/package.yaml
 
-      - name: 📥 Save Repository as Artifact
+      # Save repository as an artifact for later jobs
+      - name: Save Repository as Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -32,10 +35,11 @@ jobs:
             rhdh/
           retention-days: 7
 
-      - name: ✅ Confirm Artifact Upload
-        run: echo "✅ Artifact repo-artifact uploaded successfully!"
+      - name: Confirm Artifact Upload
+        run: echo "Artifact repo-artifact uploaded successfully!"
 
-      - name: 📥 Extract Plugin Name and Package.yaml Path
+      # Extract plugin name and package.yaml path
+      - name: Extract Plugin Name and Package.yaml Path
         id: extract-plugin
         run: |
           for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
@@ -51,70 +55,68 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect-changes
     steps:
-      - name: List Available Artifacts
-        run: |
-          echo "🔍 Fetching available artifacts..."
-          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-
-          echo "Response from GitHub API:"
-          echo "$RESPONSE" | jq
-
-          echo "Extracting artifact names..."
-          echo "$RESPONSE" | jq -r '.artifacts[]?.name // "No artifacts found"'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      # Download repository artifact
       - name: Download Repository Artifact
         uses: actions/download-artifact@v4
         with:
           name: repo-artifact
           path: .
 
+      # Verify that the artifact exists before proceeding
       - name: Check if Artifact Exists
         run: |
-          echo "Checking if repo-artifact exists..."
-          ARTIFACT_COUNT=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts" | jq '[.artifacts[] | select(.name=="repo-artifact")] | length')
-
-          if [ "$ARTIFACT_COUNT" -eq 0 ]; then
-            echo "❌ ERROR: Artifact 'repo-artifact' not found!"
+          if [ ! -d "rhdh" ]; then
+            echo "ERROR: Artifact repo-artifact not found or empty!"
             exit 1
-          else
-            echo "✅ Artifact 'repo-artifact' exists!"
           fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          echo "Artifact repo-artifact successfully downloaded!"
 
-      - name: 🌐 Set Up Kubeconfig and Install Helm
+      # Setup Kubeconfig before running Kubernetes commands
+      - name: Set Up Kubeconfig
         run: |
-          echo "🔍 Updating package lists..."
-          sudo apt update
-          
-          echo "Installing dependencies..."
-          sudo apt install -y g++ apt-transport-https curl
-          
+          echo "Creating Kubeconfig directory..."
+          sudo mkdir -p /opt/.kube
+          sudo chmod 777 /opt/.kube
+
+          echo "Writing Kubeconfig file..."
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d | sudo tee /opt/.kube/config > /dev/null
+
+          echo "Setting KUBECONFIG environment variable..."
+          export KUBECONFIG=/opt/.kube/config
+          echo "KUBECONFIG=/opt/.kube/config" >> $GITHUB_ENV
+
+          echo "Kubeconfig set up successfully!"
+
+      # Verify Kubernetes cluster connection before proceeding
+      - name: Verify Kubernetes Connection
+        run: |
+          echo "Checking Kubernetes cluster connection..."
+          export KUBECONFIG=/opt/.kube/config
+          kubectl cluster-info || { echo "ERROR: Kubernetes cluster is unreachable!"; exit 1; }
+
+      # Install Helm and update repositories
+      - name: Set Up Helm
+        run: |
+          sudo apt update && sudo apt install -y g++ apt-transport-https curl
+
           echo "Adding Helm repository..."
           curl -fsSL https://baltocdn.com/helm/signing.asc | sudo tee /etc/apt/trusted.gpg.d/helm.asc > /dev/null
           echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
           
-          echo "Updating package lists again..."
           sudo apt update
-          
-          echo "Installing Helm..."
           sudo apt install -y helm
-          
           echo "Helm installed successfully!"
-        env:
-          KUBESECRET: ${{ secrets.KUBE_CONFIG }}
 
-      - name: 📦 Deploy Red Hat Developer Hub
+      # Deploy Red Hat Developer Hub
+      - name: Deploy Red Hat Developer Hub
         run: |
           helm repo add openshift-helm-charts https://charts.openshift.io/
+          helm repo update
           helm --kubeconfig /opt/.kube/config install -f values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
 
+      # Install dynamic plugin if there are changes
       - name: Install Dynamic Plugin
         if: ${{ needs.detect-changes.outputs.modified_files != '' }}
         run: |
@@ -129,20 +131,20 @@ jobs:
     env:
       BASE_URL: https://redhat-developer-hub-rhdh-smoketest.apps.dancurran-lab2025.opdev.io/
     steps:
-      - name: 📥 Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🚀 Install Dependencies
+      - name: Install Dependencies
         run: |
           cd rhdh
           yarn install
 
-      - name: 🔬 Install Playwright Dependencies
+      - name: Install Playwright Dependencies
         run: |
           cd rhdh/e2e-tests
           yarn playwright install chromium
 
-      - name: ✅ Run Playwright Smoke Test
+      - name: Run Playwright Smoke Test
         run: |
           cd rhdh/e2e-tests
           yarn playwright test \
@@ -156,26 +158,29 @@ jobs:
     needs: run-smoke-tests
     if: always()
     steps:
-      - name: 📤 Upload Playwright Report
+      # Upload Playwright report as an artifact
+      - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
           path: rhdh/e2e-tests/playwright-report/
           retention-days: 7
 
-      - name: 🚀 Deploy Playwright Report to GitHub Pages
+      # Deploy Playwright report to GitHub Pages
+      - name: Deploy Playwright Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: rhdh/e2e-tests/playwright-report/
           keep_files: true
 
-      - name: 🔗 Print Playwright Report Link
+      # Print the Playwright Report URL
+      - name: Print Playwright Report Link
         run: |
           REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           REPO_NAME=$(basename "${{ github.repository }}")
-          echo "✅ Playwright Report is available!"
-          echo "🔗 [Click here to view the report](https://${REPO_OWNER}.github.io/${REPO_NAME}/playwright-report/index.html)"
+          echo "Playwright Report is available!"
+          echo "Report URL: https://${REPO_OWNER}.github.io/${REPO_NAME}/playwright-report/index.html"
 
   cleanup:
     name: Cleanup Deployment
@@ -183,19 +188,21 @@ jobs:
     needs: upload-logs-and-report
     if: always()
     steps:
-      - name: 📜 Get Helm Release Name
+      # Get Helm Release Name
+      - name: Get Helm Release Name
         run: |
           RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-smoketest -q | head -n 1)
           if [ -z "$RELEASE_NAME" ]; then
-            echo "⚠️ No Helm releases found, skipping uninstallation."
+            echo "No Helm releases found, skipping uninstallation."
             exit 0
           fi
           echo "Found Helm release: $RELEASE_NAME"
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
 
-      - name: ❌ Uninstall Helm Release
+      # Uninstall Helm release
+      - name: Uninstall Helm Release
         run: |
           helm uninstall --kubeconfig /opt/.kube/config $RELEASE_NAME --namespace rhdh-smoketest
-          echo "✅ Helm release '$RELEASE_NAME' has been uninstalled."
+          echo "Helm release '$RELEASE_NAME' has been uninstalled."
         env:
           RELEASE_NAME: ${{ env.RELEASE_NAME }}
