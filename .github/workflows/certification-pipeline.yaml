@@ -130,7 +130,7 @@ jobs:
           RELEASE_NAME=$(helm list -n rhdh-smoketest -q | grep "redhat-developer-hub" || true)
           if [ -n "$RELEASE_NAME" ]; then
             echo "Existing Helm release detected: $RELEASE_NAME. Uninstalling..."
-            helm uninstall "$RELEASE_NAME" --namespace rhdh-smoketest
+            helm uninstall "$RELEASE_NAME" --namespace rhdh-smoketest || echo "Helm uninstall failed, but continuing..."
             sleep 10  # Ensure cleanup completes
           else
             echo "No existing Helm release found. Proceeding with installation."
@@ -167,18 +167,19 @@ jobs:
           path: |
             ~/.npm
             ~/.cache/yarn
+            rhdh/node_modules
             rhdh/e2e-tests/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
-            - name: Cache Playwright Browsers
-              uses: actions/cache@v3
-              with:
-                path: ~/.cache/ms-playwright
-                key: ${{ runner.os }}-playwright-${{ hashFiles('**/yarn.lock') }}
-                restore-keys: |
-                  ${{ runner.os }}-playwright-  
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-  
 
       - name: Ensure RHDH Repository Exists
         run: |
@@ -210,7 +211,7 @@ jobs:
       - name: Run Playwright Smoke Test
         working-directory: rhdh/e2e-tests
         run: |
-          yarn playwright test --project="showcase"
+          yarn playwright test --project=showcase
 #          yarn playwright test \
 #            playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts \
 #            --project="showcase" \
