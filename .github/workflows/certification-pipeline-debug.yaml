@@ -2,8 +2,8 @@ name: RHDH Plugin Certification Pipeline debug
 
 on:
   push:
-    branches:
-      - main
+#    branches:
+#      - main
 #   pull_request:
 #     branches:
 #       - main
