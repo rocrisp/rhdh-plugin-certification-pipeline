@@ -211,9 +211,7 @@ jobs:
       - name: Run Playwright Smoke Test
         working-directory: rhdh/e2e-tests
         run: |
-          yarn playwright test \
-            playwright/e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts \
-            --project="any-test" \
+          yarn playwright test playwright/e2e/smoke-test.spec.ts --project="any-test"
 
   upload-logs-and-report:
     name: Upload Logs and Deploy Report
@@ -230,6 +228,7 @@ jobs:
 #          retention-days: 7
 
       - name: Upload Playwright Report
+        working-directory: rhdh/e2e-tests
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
@@ -241,6 +240,7 @@ jobs:
 
       # Deploy Playwright report to GitHub Pages
       - name: Deploy Playwright Report to GitHub Pages
+        working-directory: rhdh/e2e-tests
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.GH_PAT }}
