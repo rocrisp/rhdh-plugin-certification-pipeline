@@ -220,7 +220,6 @@ jobs:
     if: always()
     steps:
       - name: Upload Playwright Report
-        working-directory: rhdh/e2e-tests
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
