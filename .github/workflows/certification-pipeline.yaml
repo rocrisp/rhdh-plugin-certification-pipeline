@@ -285,6 +285,12 @@ jobs:
     needs: run-smoke-tests
     if: always()
     steps:
+      - name: Download Playwright Report Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+
       - name: Show current working directory and contents
         run: |
           echo "📂 Current working directory:"
