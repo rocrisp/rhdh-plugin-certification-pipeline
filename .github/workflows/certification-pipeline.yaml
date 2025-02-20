@@ -212,9 +212,9 @@ jobs:
         working-directory: rhdh/e2e-tests
         run: |
           yarn playwright test playwright/e2e/smoke-test.spec.ts --project="any-test"
-          - name: Verify Playwright Report Before Upload
 
       - name: Verify Playwright Report Before Upload
+        if: always()
         run: |
           echo "🔍 Checking if Playwright report directory exists..."
           if [ -d "rhdh/e2e-tests/playwright-report" ]; then
@@ -226,6 +226,7 @@ jobs:
           fi
 
       - name: Show current working directory and contents
+        if: always()
         run: |
           echo "📂 Current working directory:"
           pwd
@@ -233,11 +234,13 @@ jobs:
           ls -lah
 
       - name: Show one level up directory
+        if: always()
         run: |
           echo "🔍 Listing contents of parent directory:"
           ls -lah ..
 
       - name: Attempt to find Playwright Report
+        if: always()
         run: |
           echo "🔍 Trying to locate 'rhdh' directory and navigate into it..."
           if [ -d "rhdh" ]; then
