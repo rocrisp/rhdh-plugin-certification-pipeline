@@ -54,7 +54,7 @@ jobs:
       - name: 📝 List Available Artifacts
         run: |
           echo "🔍 Listing available artifacts..."
-          gh run list --json artifacts --jq '.artifacts[].name'
+          gh api repos/${{ github.repository }}/actions/artifacts | jq -r '.artifacts[].name'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
