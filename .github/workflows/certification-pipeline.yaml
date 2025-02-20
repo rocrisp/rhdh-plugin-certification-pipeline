@@ -221,22 +221,42 @@ jobs:
     steps:
       - name: Show current working directory
         run: |
-          echo "Current working directory:"
+          echo "📂 Current working directory:"
           pwd
+          echo "🔍 Listing contents of current directory:"
+          ls -lah
+
+      - name: Show one level up directory
+        run: |
+          echo "🔍 Listing contents of parent directory:"
+          ls -lah ..
 
       - name: List all directories and files before upload
         run: |
-          echo "Listing all directories from root:"
-          find / -maxdepth 3 -type d 2>/dev/null || echo "❌ Error listing root directories."
+          echo "🔍 Listing all directories in the current directory recursively:"
+          find "$(pwd)" -type d || echo "❌ Error listing directories."
           
-          echo "Listing files in current working directory:"
-          find "$(pwd)" -type f || echo "❌ Error listing files in current directory."
+          echo "🔍 Listing all files in the current directory recursively:"
+          find "$(pwd)" -type f || echo "❌ Error listing files."
           
-          echo "Listing files in e2e-tests directory:"
-          find "$(pwd)/rhdh/e2e-tests" -type f || echo "❌ Directory rhdh/e2e-tests not found!"
+          echo "🔍 Checking if e2e-tests directory exists:"
+          if [ -d "$(pwd)/rhdh/e2e-tests" ]; then
+            echo "✅ Directory rhdh/e2e-tests found!"
+            echo "🔍 Listing files inside e2e-tests:"
+            ls -lah "$(pwd)/rhdh/e2e-tests"
+          else
+            echo "❌ Directory rhdh/e2e-tests not found!"
+          fi
           
-          echo "Listing files in Playwright report directory:"
-          find "$(pwd)/rhdh/e2e-tests/playwright-report" -type f || echo "❌ Directory rhdh/e2e-tests/playwright-report not found!"
+          echo "🔍 Checking if Playwright report directory exists:"
+          if [ -d "$(pwd)/rhdh/e2e-tests/playwright-report" ]; then
+            echo "✅ Directory rhdh/e2e-tests/playwright-report found!"
+            echo "🔍 Listing files inside Playwright report directory:"
+            ls -lah "$(pwd)/rhdh/e2e-tests/playwright-report"
+          else
+            echo "❌ Directory rhdh/e2e-tests/playwright-report not found!"
+          fi
+
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         with:
