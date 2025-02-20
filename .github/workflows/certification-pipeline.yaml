@@ -124,9 +124,22 @@ jobs:
       # Deploy Red Hat Developer Hub
       - name: Deploy Red Hat Developer Hub
         run: |
+          export KUBECONFIG=/opt/.kube/config
+
+          # Remove existing Helm release if it exists
+          RELEASE_NAME=$(helm list -n rhdh-smoketest -q | grep "redhat-developer-hub" || true)
+          if [ -n "$RELEASE_NAME" ]; then
+            echo "Existing Helm release detected: $RELEASE_NAME. Uninstalling..."
+            helm uninstall "$RELEASE_NAME" --namespace rhdh-smoketest
+            sleep 10  # Ensure cleanup completes
+          else
+            echo "No existing Helm release found. Proceeding with installation."
+          fi
+
+          # Proceed with installation
           helm repo add openshift-helm-charts https://charts.openshift.io/
           helm repo update
-          helm --kubeconfig /opt/.kube/config install -f values.yaml \
+          helm install -f values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
 
@@ -216,24 +229,25 @@ jobs:
   cleanup:
     name: Cleanup Deployment
     runs-on: ubuntu-latest
-    needs: upload-logs-and-report
     if: always()
     steps:
-      # Get Helm Release Name
-      - name: Get Helm Release Name
+      # Ensure kubeconfig is set before running helm commands
+      - name: Set Up Kubeconfig
         run: |
-          RELEASE_NAME=$(helm --kubeconfig /opt/.kube/config list -n rhdh-smoketest -q | head -n 1)
-          if [ -z "$RELEASE_NAME" ]; then
-            echo "No Helm releases found, skipping uninstallation."
-            exit 0
-          fi
-          echo "Found Helm release: $RELEASE_NAME"
-          echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
+          mkdir -p /opt/.kube
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /opt/.kube/config
+          export KUBECONFIG=/opt/.kube/config
+          echo "KUBECONFIG=/opt/.kube/config" >> $GITHUB_ENV
 
-      # Uninstall Helm release
-      - name: Uninstall Helm Release
+      # Ensure Helm release is removed before deploying a new one
+      - name: Uninstall Helm Release if Exists
         run: |
-          helm uninstall --kubeconfig /opt/.kube/config $RELEASE_NAME --namespace rhdh-smoketest
-          echo "Helm release '$RELEASE_NAME' has been uninstalled."
-        env:
-          RELEASE_NAME: ${{ env.RELEASE_NAME }}
+          export KUBECONFIG=/opt/.kube/config
+          RELEASE_NAME=$(helm list -n rhdh-smoketest -q | grep "redhat-developer-hub" || true)
+
+          if [ -n "$RELEASE_NAME" ]; then
+            echo "Removing existing Helm release: $RELEASE_NAME"
+            helm uninstall "$RELEASE_NAME" --namespace rhdh-smoketest
+          else
+            echo "No existing Helm release found."
+          fi
