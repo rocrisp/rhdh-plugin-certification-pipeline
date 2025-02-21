@@ -23,10 +23,9 @@ upstream:
     appConfig:
       app:
         baseUrl: https://{{- include "janus-idp.hostname" . }}
-      auth:
-        providers:
-          guest:
-            dangerouslyAllowOutsideDevelopment: true
+      extraAppConfig:
+      - configMapRef: app-config-rhdh
+        filename: app-config-rhdh.yaml
       backend:
         auth:
           externalAccess:
@@ -42,8 +41,8 @@ upstream:
             password: ${POSTGRESQL_ADMIN_PASSWORD}
             user: postgres
     args:
-    - --config
-    - dynamic-plugins-root/app-config.dynamic-plugins.yaml
+      - --config
+      - dynamic-plugins-root/app-config.dynamic-plugins.yaml
     containerPorts:
       backend: 7007
     containerSecurityContext:

@@ -1,0 +1,23 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: app-config-rhdh
+data:
+  app-config-rhdh.yaml: |
+    app:
+      title: My Red Hat Developer Hub
+    integrations:
+      github:
+        - host: github.com
+          token: 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
+    auth:
+      allowGuestAccess: true
+      environment: development
+      providers:
+        github:
+          development:
+            clientId: Ov23lidRQE285zgCJToe
+            clientSecret: f3c77f580053adf3373f1d58b50f7aded445b9e4
+    dangerouslyAllowSignInWithoutUserInCatalog: true
+    enabled:
+      github: true
