@@ -32,6 +32,7 @@ jobs:
           path: |
             plugins/
             values.yaml
+            app-config-rhdh.yaml
             rhdh/
           retention-days: 7
 
@@ -107,6 +108,13 @@ jobs:
           echo "Checking Kubernetes cluster connection..."
           export KUBECONFIG=/opt/.kube/config
           kubectl cluster-info || { echo "ERROR: Kubernetes cluster is unreachable!"; exit 1; }
+      
+      # Install configmap for Red Hat Developer Hub
+      - name: Install ConfigMap for Red Hat Developer Hub
+        run: |
+          echo "Creating ConfigMap for Red Hat Developer Hub..."
+          kubectl apply -f app-config-rhdh.yaml -n rhdh-smoketest
+          echo "ConfigMap created successfully!"
 
       # Install Helm and update repositories
       - name: Set Up Helm
@@ -139,7 +147,7 @@ jobs:
           # Proceed with installation
           helm repo add openshift-helm-charts https://charts.openshift.io/
           helm repo update
-          helm install -f values.yaml -f app-config-rhdh.yaml\
+          helm install -f values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
 
