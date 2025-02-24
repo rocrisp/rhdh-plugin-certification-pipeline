@@ -219,7 +219,7 @@ jobs:
       - name: Run Playwright Smoke Test
         working-directory: rhdh/e2e-tests
         run: |
-          yarn playwright test playwright/e2e/smoke-test.spec.ts --project="any-test"
+          yarn playwright test --project="any-test" e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts
       # ✅ Upload Playwright Report inside the same job
       - name: Upload Playwright Report
         if: always()

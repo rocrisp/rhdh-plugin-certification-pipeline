@@ -6,8 +6,8 @@ global:
   clusterRouterBase: apps.dancurran-lab2025.opdev.io
   dynamic:
     plugins:
-      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
-        disabled: false
+#      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
+#        disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar-backend-dynamic
