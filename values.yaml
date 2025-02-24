@@ -34,6 +34,8 @@ upstream:
     appConfig:
       app:
         baseUrl: https://{{- include "janus-idp.hostname" . }}
+      techRadar:
+        url: "test"
       extraAppConfig:
       - configMapRef: app-config-rhdh
         filename: app-config-rhdh.yaml
