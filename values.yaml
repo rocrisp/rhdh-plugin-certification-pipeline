@@ -1,9 +1,5 @@
 USER-SUPPLIED VALUES:
 global:
-  auth:
-    backend:
-      enabled: true
-    environment: development
   clusterRouterBase: apps.dancurran-lab2025.opdev.io
   dynamic:
     plugins:
