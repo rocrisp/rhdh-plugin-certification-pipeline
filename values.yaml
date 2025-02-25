@@ -3,6 +3,10 @@ global:
   auth:
     backend:
       enabled: true
+    environment: development
+    providers:
+      guest:
+        dangerouslyAllowOutsideDevelopment: true
   clusterRouterBase: apps.dancurran-lab2025.opdev.io
   dynamic:
     plugins:
@@ -12,8 +16,6 @@ global:
         disabled: false
       - package: ./dynamic-plugins/dist/backstage-community-plugin-tech-radar-backend-dynamic
         disabled: false
-      #      - package: ./dynamic-plugins/dist/backstage-plugin-techdocs-module-addons-contrib
-      #        disabled: false
       - package: '@backstage-community/plugin-todo@0.2.42'
         disabled: false
         integrity: sha512-agmfwxHkZPy0zaXzjMKY9Us9l7J2og+z7p2lDWQBmlJ1KZRo6OBQdnlG1mTEryfEEl/bx5Ko+f1PhFj2/BmiIQ==
