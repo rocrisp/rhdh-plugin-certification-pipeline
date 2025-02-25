@@ -187,6 +187,11 @@ jobs:
           yarn install
       - name: Install Playwright Dependencies
         run: |
+          echo "📂 Listing current directory before installation:"
+          pwd
+          ls -lah
+          echo "📂 Listing directories before installation:"
+          ls -lah rhdh/e2e-tests
           cd rhdh/e2e-tests
           yarn playwright install chromium
       - name: Run Playwright Smoke Test
