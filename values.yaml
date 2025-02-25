@@ -4,9 +4,6 @@ global:
     backend:
       enabled: true
     environment: development
-    providers:
-      guest:
-        dangerouslyAllowOutsideDevelopment: true
   clusterRouterBase: apps.dancurran-lab2025.opdev.io
   dynamic:
     plugins:
@@ -27,9 +24,9 @@ upstream:
     appConfig:
       techRadar:
         url: "test"
-      extraAppConfig:
-        - configMapRef: app-config-rhdh
-          filename: app-config-rhdh.yaml
+    extraAppConfig:
+      - configMapRef: app-config-rhdh
+        filename: app-config-rhdh.yaml
     extraEnvVars:
       - name: BACKEND_SECRET
         valueFrom:
