@@ -64,27 +64,27 @@ jobs:
           path: .
 
       # Verify that the artifact exists before proceeding
-#      - name: 📝 Check if Artifact Exists
-#        run: |
-#          echo "🔍 Checking if 'repo-artifact' exists..."
-#          ARTIFACT_NAME="repo-artifact"
-#
-#          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-#            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-#
-#          echo "Response from GitHub API:"
-#          echo "$RESPONSE" | jq
-#
-#          ARTIFACT_COUNT=$(echo "$RESPONSE" | jq "[.artifacts[]? | select(.name==\"$ARTIFACT_NAME\")] | length")
-#
-#          if [ "$ARTIFACT_COUNT" -eq 0 ]; then
-#            echo "❌ ERROR: Artifact '$ARTIFACT_NAME' not found!"
-#            exit 1
-#          else
-#            echo "✅ Artifact '$ARTIFACT_NAME' exists!"
-#          fi
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: 📝 Check if Artifact Exists
+        run: |
+          echo "🔍 Checking if 'repo-artifact' exists..."
+          ARTIFACT_NAME="repo-artifact"
+
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
+
+          echo "Response from GitHub API:"
+          echo "$RESPONSE" | jq
+
+          ARTIFACT_COUNT=$(echo "$RESPONSE" | jq "[.artifacts[]? | select(.name==\"$ARTIFACT_NAME\")] | length")
+
+          if [ "$ARTIFACT_COUNT" -eq 0 ]; then
+            echo "❌ ERROR: Artifact '$ARTIFACT_NAME' not found!"
+            exit 1
+          else
+            echo "✅ Artifact '$ARTIFACT_NAME' exists!"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Setup Kubeconfig before running Kubernetes commands
       - name: Set Up Kubeconfig
