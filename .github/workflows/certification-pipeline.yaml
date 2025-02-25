@@ -40,23 +40,23 @@ jobs:
         run: echo "Artifact repo-artifact uploaded successfully!"
 
       # Extract plugin name and package.yaml path
-#      - name: Extract Plugin Name and Package.yaml Path
-#        id: extract-plugin
-#        run: |
-#          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
-#          if [[ "$file" == plugins/*/package.yaml ]]; then
-#            PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)
-#            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_OUTPUT
-#            echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
-#          fi
-#          done
+      - name: Extract Plugin Name and Package.yaml Path
+        id: extract-plugin
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+          if [[ "$file" == plugins/*/package.yaml ]]; then
+            PLUGIN_NAME=$(echo "$file" | cut -d'/' -f2)
+            echo "PLUGIN_NAME=$PLUGIN_NAME" >> $GITHUB_OUTPUT
+            echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
+          fi
+          done
 
   setup-and-deploy:
     name: Setup and Deploy - ${{ needs.detect-changes.outputs.plugin_name }}
     runs-on: ubuntu-latest
     needs: detect-changes
     steps:
-#       Download repository artifact
+      # Download repository artifact
       - name: Download Repository Artifact
         uses: actions/download-artifact@v4
         with:
@@ -108,7 +108,7 @@ jobs:
           echo "Checking Kubernetes cluster connection..."
           export KUBECONFIG=/opt/.kube/config
           kubectl cluster-info || { echo "ERROR: Kubernetes cluster is unreachable!"; exit 1; }
-      
+
       # Install configmap for Red Hat Developer Hub
       - name: Install ConfigMap for Red Hat Developer Hub
         run: |
@@ -151,13 +151,13 @@ jobs:
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
 
-#      # Install dynamic plugin if there are changes
-      - name: Install Dynamic Plugin
-        if: ${{ needs.detect-changes.outputs.modified_files != '' }}
-        run: |
-          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f "${{ needs.detect-changes.outputs.package_yaml }}" \
-            redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
-            --namespace rhdh-smoketest
+  #      # Install dynamic plugin if there are changes
+  #      - name: Install Dynamic Plugin
+  #        if: ${{ needs.detect-changes.outputs.modified_files != '' }}
+  #        run: |
+  #          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f "${{ needs.detect-changes.outputs.package_yaml }}" \
+  #            redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
+  #            --namespace rhdh-smoketest
 
   run-smoke-tests:
     name: Run Smoke Tests
