@@ -50,7 +50,6 @@ jobs:
             echo "PACKAGE_YAML=$file" >> $GITHUB_OUTPUT
           fi
           done
-
   setup-and-deploy:
     name: Setup and Deploy - ${{ needs.detect-changes.outputs.plugin_name }}
     runs-on: ubuntu-latest
@@ -68,15 +67,11 @@ jobs:
         run: |
           echo "🔍 Checking if 'repo-artifact' exists..."
           ARTIFACT_NAME="repo-artifact"
-
           RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts")
-
           echo "Response from GitHub API:"
           echo "$RESPONSE" | jq
-
           ARTIFACT_COUNT=$(echo "$RESPONSE" | jq "[.artifacts[]? | select(.name==\"$ARTIFACT_NAME\")] | length")
-
           if [ "$ARTIFACT_COUNT" -eq 0 ]; then
             echo "❌ ERROR: Artifact '$ARTIFACT_NAME' not found!"
             exit 1
@@ -92,16 +87,12 @@ jobs:
           echo "Creating Kubeconfig directory..."
           sudo mkdir -p /opt/.kube
           sudo chmod 777 /opt/.kube
-
           echo "Writing Kubeconfig file..."
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d | sudo tee /opt/.kube/config > /dev/null
-
           echo "Setting KUBECONFIG environment variable..."
           export KUBECONFIG=/opt/.kube/config
           echo "KUBECONFIG=/opt/.kube/config" >> $GITHUB_ENV
-
           echo "Kubeconfig set up successfully!"
-
       # Verify Kubernetes cluster connection before proceeding
       - name: Verify Kubernetes Connection
         run: |
@@ -115,12 +106,10 @@ jobs:
           echo "Creating ConfigMap for Red Hat Developer Hub..."
           kubectl apply -f app-config-rhdh.yaml -n rhdh-smoketest
           echo "ConfigMap created successfully!"
-
       # Install Helm and update repositories
       - name: Set Up Helm
         run: |
           sudo apt update && sudo apt install -y g++ apt-transport-https curl
-
           echo "Adding Helm repository..."
           curl -fsSL https://baltocdn.com/helm/signing.asc | sudo tee /etc/apt/trusted.gpg.d/helm.asc > /dev/null
           echo "deb https://baltocdn.com/helm/stable/debian/ all main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
@@ -128,12 +117,10 @@ jobs:
           sudo apt update
           sudo apt install -y helm
           echo "Helm installed successfully!"
-
       # Deploy Red Hat Developer Hub
       - name: Deploy Red Hat Developer Hub
         run: |
           export KUBECONFIG=/opt/.kube/config
-
           # Remove existing Helm release if it exists
           RELEASE_NAME=$(helm list -n rhdh-smoketest -q | grep "redhat-developer-hub" || true)
           if [ -n "$RELEASE_NAME" ]; then
@@ -143,14 +130,12 @@ jobs:
           else
             echo "No existing Helm release found. Proceeding with installation."
           fi
-
           # Proceed with installation
           helm repo add openshift-helm-charts https://charts.openshift.io/
           helm repo update
           helm install -f values.yaml \
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
-
   #      # Install dynamic plugin if there are changes
   #      - name: Install Dynamic Plugin
   #        if: ${{ needs.detect-changes.outputs.modified_files != '' }}
@@ -180,7 +165,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
-
       - name: Clone RHDH 1.4 and ensure the repository Exists
         run: |
           if [ ! -d "rhdh" ]; then
@@ -196,23 +180,19 @@ jobs:
             exit 1
           else
             echo "✅ RHDH directory found."
-          fi    
-
+          fi
       - name: Install Dependencies
         run: |
           cd rhdh
           yarn install
-
       - name: Install Playwright Dependencies
         run: |
           cd rhdh/e2e-tests
           yarn playwright install chromium
-
       - name: Run Playwright Smoke Test
         working-directory: rhdh/e2e-tests
         run: |
           yarn playwright test --project="showcase" e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts
-
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -234,7 +214,6 @@ jobs:
           else
             echo "❌ ERROR: Playwright report directory NOT found!"
           fi
-
       - name: Show current working directory and contents
         if: always()
         run: |
@@ -242,13 +221,11 @@ jobs:
           pwd
           echo "🔍 Listing contents of current directory:"
           ls -lah
-
       - name: Show one level up directory
         if: always()
         run: |
           echo "🔍 Listing contents of parent directory:"
           ls -lah ..
-
       - name: Attempt to find Playwright Report
         if: always()
         run: |
@@ -277,8 +254,7 @@ jobs:
             fi
           else
             echo "❌ 'rhdh' directory NOT found in current path!"
-          fi    
-
+          fi
   upload-logs-and-report:
     name: Upload Logs and Deploy Report
     runs-on: ubuntu-latest
@@ -297,7 +273,6 @@ jobs:
           pwd
           echo "🔍 Listing contents of current directory:"
           ls -lah
-
       - name: Deploy Playwright Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -311,7 +286,6 @@ jobs:
           REPO_NAME=$(basename "${{ github.repository }}")
           echo "Playwright Report is available!"
           echo "Report URL: https://${REPO_OWNER}.github.io/${REPO_NAME}"
-
   cleanup:
     name: Cleanup Deployment
     runs-on: ubuntu-latest
@@ -324,13 +298,11 @@ jobs:
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > /opt/.kube/config
           export KUBECONFIG=/opt/.kube/config
           echo "KUBECONFIG=/opt/.kube/config" >> $GITHUB_ENV
-
       # Ensure Helm release is removed before deploying a new one
       - name: Uninstall Helm Release if Exists
         run: |
           export KUBECONFIG=/opt/.kube/config
           RELEASE_NAME=$(helm list -n rhdh-smoketest -q | grep "redhat-developer-hub" || true)
-
           if [ -n "$RELEASE_NAME" ]; then
             echo "Removing existing Helm release: $RELEASE_NAME"
             helm uninstall "$RELEASE_NAME" --namespace rhdh-smoketest
