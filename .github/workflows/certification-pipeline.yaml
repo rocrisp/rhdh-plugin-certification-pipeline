@@ -181,7 +181,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Ensure RHDH Repository Exists
+      - name: Clone RHDH 1.4 and ensure the repository Exists
         run: |
           if [ ! -d "rhdh" ]; then
             echo "RHDH repository not found. Cloning..."
