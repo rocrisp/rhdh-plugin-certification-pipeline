@@ -56,12 +56,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect-changes
     steps:
-      # Download repository artifact
-#      - name: Download Repository Artifact
-#        uses: actions/download-artifact@v4
-#        with:
-#          name: repo-artifact
-#          path: .
+#       Download repository artifact
+      - name: Download Repository Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: repo-artifact
+          path: .
 
       # Verify that the artifact exists before proceeding
 #      - name: 📝 Check if Artifact Exists
