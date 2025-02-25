@@ -185,7 +185,7 @@ jobs:
         run: |
           if [ ! -d "rhdh" ]; then
             echo "RHDH repository not found. Cloning..."
-            git clone https://github.com/redhat-developer/rhdh.git
+            git clone --branch release-1.4 --depth=1 https://github.com/redhat-developer/rhdh.git
           else
             echo "RHDH repository already exists."
           fi
