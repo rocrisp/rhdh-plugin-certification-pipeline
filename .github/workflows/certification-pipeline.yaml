@@ -191,7 +191,7 @@ jobs:
           pwd
           ls -lah
           echo "📂 Listing directories before installation:"
-          ls -lah rhdh/e2e-tests
+          ls -lah rhdh
           cd rhdh/e2e-tests
           yarn playwright install chromium
       - name: Run Playwright Smoke Test
