@@ -165,14 +165,15 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - name: Clone RHDH 1.4 and ensure the repository Exists
+      - name: Clone RHDH 1.4 and overwrite if it exists
         run: |
-          if [ ! -d "rhdh" ]; then
-            echo "RHDH repository not found. Cloning..."
-            git clone --branch release-1.4 --depth=1 https://github.com/redhat-developer/rhdh.git
-          else
-            echo "RHDH repository already exists."
-          fi
+          echo "Removing existing 'rhdh' directory if it exists..."
+          rm -rf rhdh
+
+          echo "Cloning RHDH 1.4 repository..."
+          git clone --branch release-1.4 --depth=1 https://github.com/redhat-developer/rhdh.git
+
+          echo "Clone completed!"
       - name: Verify RHDH Directory
         run: |
           if [ ! -d "rhdh" ]; then
