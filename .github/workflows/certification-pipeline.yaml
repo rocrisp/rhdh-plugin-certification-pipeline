@@ -151,13 +151,13 @@ jobs:
             redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
             --namespace rhdh-smoketest --create-namespace
 
-      # Install dynamic plugin if there are changes
-      - name: Install Dynamic Plugin
-        if: ${{ needs.detect-changes.outputs.modified_files != '' }}
-        run: |
-          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f "${{ needs.detect-changes.outputs.package_yaml }}" \
-            redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
-            --namespace rhdh-smoketest
+#      # Install dynamic plugin if there are changes
+#      - name: Install Dynamic Plugin
+#        if: ${{ needs.detect-changes.outputs.modified_files != '' }}
+#        run: |
+#          helm --kubeconfig /opt/.kube/config upgrade --reuse-values -f "${{ needs.detect-changes.outputs.package_yaml }}" \
+#            redhat-developer-hub openshift-helm-charts/redhat-developer-hub \
+#            --namespace rhdh-smoketest
 
   run-smoke-tests:
     name: Run Smoke Tests
@@ -180,14 +180,6 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-
-
-      - name: Cache Playwright Browsers
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-playwright-  
 
       - name: Ensure RHDH Repository Exists
         run: |
@@ -220,7 +212,7 @@ jobs:
         working-directory: rhdh/e2e-tests
         run: |
           yarn playwright test --project="any-test" e2e/plugins/dynamic-plugins-info/dynamic-plugins-info.spec.ts
-      # ✅ Upload Playwright Report inside the same job
+
       - name: Upload Playwright Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -306,7 +298,6 @@ jobs:
           echo "🔍 Listing contents of current directory:"
           ls -lah
 
-      # Deploy Playwright report to GitHub Pages
       - name: Deploy Playwright Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
@@ -314,7 +305,6 @@ jobs:
           publish_dir: playwright-report/
           keep_files: true
 
-      # Print the Playwright Report URL
       - name: Print Playwright Report Link
         run: |
           REPO_OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')

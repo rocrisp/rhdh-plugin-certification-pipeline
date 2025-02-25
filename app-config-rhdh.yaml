@@ -14,6 +14,8 @@ data:
       allowGuestAccess: true
       environment: development
       providers:
+        guest:
+          dangerouslyAllowOutsideDevelopment: true
         github:
           development:
             clientId: Ov23lidRQE285zgCJToe
