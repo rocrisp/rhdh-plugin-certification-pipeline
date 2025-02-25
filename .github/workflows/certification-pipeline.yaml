@@ -4,42 +4,42 @@ on:
   workflow_dispatch:
 
 jobs:
-#  detect-changes:
-#    name: Detect PR Changes
-#    runs-on: ubuntu-latest
-#    outputs:
-#      modified_files: ${{ steps.changed-files.outputs.all_changed_files }}
-#      plugin_name: ${{ steps.extract-plugin.outputs.plugin_name }}
-#      package_yaml: ${{ steps.extract-plugin.outputs.package_yaml }}
-#    steps:
-#      # Checkout the repository
-#      - name: Checkout Repository
-#        uses: actions/checkout@v4
-#
-#      # Identify modified plugin files
+  detect-changes:
+    name: Detect PR Changes
+    runs-on: ubuntu-latest
+    outputs:
+      modified_files: ${{ steps.changed-files.outputs.all_changed_files }}
+      plugin_name: ${{ steps.extract-plugin.outputs.plugin_name }}
+      package_yaml: ${{ steps.extract-plugin.outputs.package_yaml }}
+    steps:
+      # Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Identify modified plugin files
 #      - name: Get Changed Files
 #        id: changed-files
 #        uses: tj-actions/changed-files@v41
 #        with:
 #          files: plugins/**/package.yaml
-#
-#      # Save repository as an artifact for later jobs
-#      - name: Save Repository as Artifact
-#        if: always()
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: repo-artifact
-#          path: |
-#            plugins/
-#            values.yaml
-#            app-config-rhdh.yaml
-#            rhdh/
-#          retention-days: 7
-#
-#      - name: Confirm Artifact Upload
-#        run: echo "Artifact repo-artifact uploaded successfully!"
-#
-#      # Extract plugin name and package.yaml path
+
+      # Save repository as an artifact for later jobs
+      - name: Save Repository as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-artifact
+          path: |
+            plugins/
+            values.yaml
+            app-config-rhdh.yaml
+            rhdh/
+          retention-days: 7
+
+      - name: Confirm Artifact Upload
+        run: echo "Artifact repo-artifact uploaded successfully!"
+
+      # Extract plugin name and package.yaml path
 #      - name: Extract Plugin Name and Package.yaml Path
 #        id: extract-plugin
 #        run: |
@@ -54,7 +54,7 @@ jobs:
   setup-and-deploy:
     name: Setup and Deploy - ${{ needs.detect-changes.outputs.plugin_name }}
     runs-on: ubuntu-latest
-#    needs: detect-changes
+    needs: detect-changes
     steps:
       # Download repository artifact
 #      - name: Download Repository Artifact
